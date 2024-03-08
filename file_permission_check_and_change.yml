@@ -1,4 +1,3 @@
----item.0.srv1
 - name: Clearing the deviation for the given files
   hosts: all
   ignore_errors: yes
