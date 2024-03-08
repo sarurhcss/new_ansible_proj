@@ -1,0 +1,19 @@
+---
+- name: Delete home directories
+  hosts: all
+  ignore_errors: yes
+  become: yes
+  vars:
+    delete_directories:
+      - /home/binu_dir
+      - /home/binu_k
+
+
+
+  tasks:
+    - name: Delete the given directories
+      file:
+        path: "{{item}}"
+        state: absent
+      with_items: "{{delete_directories}}"
+

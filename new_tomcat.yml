@@ -1,0 +1,94 @@
+---
+- name: Getting the port details
+  hosts: ansible-node3-rhel86,ansible-node2-rhel76
+  become: yes
+  ignore_errors: yes
+  vars:
+    csv_path: /tmp
+    csv_filename: tomcat_apache_status.csv
+    headers: Server Name,Server Hostname,Server OS,Server OS Version,MW Name,MW Version,Installation Path,MW Version,TCP Port,Instance Name
+  tasks:
+    - name: Removing the old file
+      file:
+        path: /tmp/tomcat_apache_status.csv
+        state: absent
+      delegate_to: localhost
+
+    - name: Create the Base CSV headers
+      ansible.builtin.lineinfile:
+        dest: "{{ csv_path }}/{{ csv_filename }}"
+        line: "{{ headers }}"
+        create: true
+        state: present
+      delegate_to: localhost
+      run_once: true
+
+
+    - name: First getting the facts detals of ports and pids
+      listen_ports_facts:
+
+    - name: Debug the total facts
+      debug: 
+        var: ansible_facts.tcp_listen
+    - name: TCP whitelist violation
+      ansible.builtin.debug:
+        msg: TCP port {{ item.port }} by pid {{ item.pid }} violates the whitelist
+      vars:
+        tcp_listen_violations: "{{ ansible_facts.tcp_listen | selectattr('port', 'in', tcp_whitelist) | list }}"
+        tcp_whitelist:
+          - 22
+          - 25
+      loop: "{{ tcp_listen_violations }}"
+    - name: Port number of httpd
+      debug:
+        msg: "{{ item.port }}"
+      vars:
+        tcp_listen_violations: "{{ ansible_facts.tcp_listen | selectattr('name', 'in', tcp_whitelist) | list }}"
+        tcp_whitelist:
+          - httpd
+      loop: "{{ tcp_listen_violations }}"
+    - name: Port number of Tomcat
+      debug:
+        msg: "{{ item.port }}"
+      vars:
+        tcp_listen_tomcat: "{{ ansible_facts.tcp_listen | selectattr('name', 'in', tcp_whitelist) | list }}"
+        tcp_whitelist:
+          - java
+      loop: "{{ tcp_listen_tomcat }}"
+      register: tomcat_port_register
+    - name: Debuging tomcat port register
+      debug:
+        var: tomcat_port_register
+        # with_items: "{{tomcat_port_register}}" 
+    - name: Debug only port
+      debug:
+        msg: "{{item.msg}}"
+      with_items: "{{tomcat_port_register.results}}"
+      register: final
+
+    - name: debug
+      debug:
+        var: final 
+    - name: setfact
+      set_fact:
+        tom_port: "{{final.results|map(attribute='msg')|join('/')}}"
+    - name: debug setfact
+      debug:
+        var: tom_port
+    - name: Making Set fact
+      set_fact:
+        Server_Name: "{{ ansible_fqdn }}"
+        Server_Hostname:  "{{ ansible_hostname }}"
+        OS_Version: "{{ ansible_distribution }}"
+        Server_OS_Version: " {{ ansible_distribution_version }}"
+        MW_TCP_Port : "{{tom_port}}"
+
+    - name: Build out CSV file
+      ansible.builtin.lineinfile:
+        dest: "{{ csv_path }}/{{ csv_filename }}"
+        line: "{{ Server_Name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},-,-,-,-,{{ MW_TCP_Port }}"
+        create: true
+        state: present
+      delegate_to: localhost
+
+

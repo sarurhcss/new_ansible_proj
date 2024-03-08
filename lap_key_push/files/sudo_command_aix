@@ -1,0 +1,1 @@
+micuxsl1 ALL = (root) NOPASSWD: /usr/sbin/prtconf, /usr/bin/netstat, /usr/bin/sar, /usr/bin/lparstat

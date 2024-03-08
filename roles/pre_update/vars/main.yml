@@ -1,0 +1,4 @@
+---
+path_for_reports: /home/svcansible
+region: dev
+# vars file for pre_update

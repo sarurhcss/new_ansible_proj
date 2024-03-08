@@ -1,0 +1,127 @@
+---
+- 
+  hosts:  ansible-node3-rhel86 ansible-node2-rhel76
+  ignore_errors: true
+  gather_facts: yes
+  tasks: 
+    - name: Removing the old file
+      file:
+        path: "{{item}}"
+        state: absent
+      delegate_to: localhost
+      loop:
+        - /tmp/new_status.txt
+        - /tmp/new_csv.csv
+        - /tmp/new_txt.txt
+    - name: create empty file
+      file:
+        path: /tmp/new_status.txt
+        state: touch
+      delegate_to: localhost
+    - name: create a base csv file
+      ansible.builtin.lineinfile:
+        dest: /tmp/new_csv.csv
+        line: servername \n serverhostname \n 
+        create: true
+        state: present
+      delegate_to: localhost
+      run_once: true
+
+    - name: Check the installed packages
+      shell:
+        "rpm -qa --last | grep -i 2022 | grep -i Jun"
+      register: Installed_package
+    - name: Installed package out put
+      debug:
+        msg: "{{Installed_package }}"
+
+    - name: Shell command to check the hostname
+      shell: "hostname -f "
+      register: hostname_out
+
+    - name: printing the value
+      debug: 
+        var: hostname_out
+        # - name: copy the installed package in to a txt file
+        # copy:
+        # dest: /tmp/copy.txt
+        # content: |
+        #   "{{item}}"
+        # loop: 
+        #  - "{{Installed_package.stdout}}"
+        #delegate_to: localhost
+
+        # - name: cat the file
+        # shell: cat /tmp/new_status.txt
+        # delegate_to: localhost
+        # register: cat
+
+    - name: Making set fact
+      set_fact:
+        Server_name: "{{ansible_fqdn}}"
+        Server_Hostname: "{{ ansible_hostname }}"
+        OS_Version: "{{ ansible_distribution }}"
+        Server_OS_Version: " {{ ansible_distribution_version }}"
+        Installed_Packages: "{{item.stdout_lines|join('\n') }}"
+        #Installed_Packages: "{{item.stdout_lines}}"
+      loop:
+        - "{{Installed_package}}"
+
+    - name: copy to  a txt file
+      blockinfile:
+        path: "/tmp/new_status.txt"
+        block: |
+          SERVER NAME       : {{Server_name|default('NO')}}
+          SERVER HOSTNAME   : {{ Server_Hostname|default('NO') }}
+          OS Version        : {{ OS_Version|default('NO') }}
+          SERVER OS VERSION : {{ Server_OS_Version|default('NO') }}
+          INSTALLED PACKAGES: -{{Installed_Packages|default('NO')}}
+      delegate_to: localhost
+
+    - name: Build out CSV file
+      ansible.builtin.lineinfile:
+        dest: /tmp/new_csv.csv
+        #line: "{{ Server_Name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},{{IP_Address}},{{Kernel}},{{Installed_package.stdout_lines|join(' | ')}}"
+        #line: "{{ Server_name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},{{Installed_Packages}}"
+        line: "{{ Server_name }}\n {{Installed_Packages}}"
+        create: true
+        #servername,serverhostname,osversion,serverosversion,installedpackage
+        state: present
+        insertafter: EOF
+      delegate_to: localhost
+
+
+    - name: Build out new txt file
+      ansible.builtin.lineinfile:
+        dest: /tmp/new_txt.txt
+        #line: "{{ Server_Name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},{{IP_Address}},{{Kernel}},{{Installed_package.stdout_lines|join(' | ')}}"
+        #line: "{{ Server_name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},{{Installed_Packages}}"
+        line: "##### Report ##### \nServer name: {{ Server_name }} \nInstalled Packages : \n{{Installed_Packages}} \n###########"
+        create: true
+        #servername,serverhostname,osversion,serverosversion,installedpackage
+        state: present
+        insertafter: EOF
+      delegate_to: localhost
+
+      #    - name: print one more
+      # debug:
+      #  var: one_more  
+
+      #   - name: Create the Base CSV headers
+      # copy:
+      #  dest: /tmp/Server_status.txt ###"{{ csv_path }}/{{ csv_filename }}"
+      #  content: |
+      #     Server_Name: "{{ ansible_fqdn }}"
+      #     Server_Hostname: "{{ ansible_hostname }}"
+      #     OS_Version: "{{ ansible_distribution }}"
+      #     Server_OS_Version: " {{ ansible_distribution_version }}"
+      #     Installed_packages: "{{Installed_package.stdout.split('\n')[:-1]}}"
+           #"{{Installed_package.stdout_lines|join('\n')}}\n"
+           #        markers:
+           # begin: "### BEGIN BLOCK ###"
+           # end: "### END BLOCK ###"
+           # delegate_to: localhost   
+      ##############################################################
+
+     
+

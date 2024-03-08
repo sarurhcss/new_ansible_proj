@@ -1,0 +1,112 @@
+#tasks:
+
+- name: Checking the user is present or not
+  shell: id svc_ww_micuxsl1
+  when: ansible_distribution == "RedHat"
+  register: user_status
+  ignore_errors: yes
+- name: Debug the status of the user
+  debug:
+    var: user_status
+- name: creating Grooup
+  group:
+    name: "{{ group }}"
+    state: present
+- name: Create directory Structure
+  file:
+    name: "/home/users/"
+    state: directory
+    mode: 0755
+
+
+- name: Creating user if not present
+  user:
+    name: "{{ username_rhel }}"
+    state: present
+    password: $6$BkhBR65gjPjA3yIa$kg5XIWr2h1s4ccQN/XSuAeixlpzal1qfKdyb.2byoU7sPhf9pDoagUY0pUv6UoLpy5dSNJuKZQdHnEpEeg2t.1
+    home: "/home/users/{{username_rhel}}"
+    group: "{{ group }}"  
+  when: (ansible_distribution == "RedHat") and (user_status.rc != "0")
+- name: Creating user if not present
+  user:
+    name: "{{ username_aix }}"
+    state: present
+    password: $6$BkhBR65gjPjA3yIa$kg5XIWr2h1s4ccQN/XSuAeixlpzal1qfKdyb.2byoU7sPhf9pDoagUY0pUv6UoLpy5dSNJuKZQdHnEpEeg2t.1
+    home: "/home/users/{{username_aix}}"
+    shell: "/bin/bash"
+    group: "{{ group }}"
+  when: ansible_distribution == "Ubuntu"
+  
+  #- name: Create Directory sructures for the user
+    #  file:
+    #name: "/home/users/{{ username }}/"
+    #state: directory
+    #force: yes
+    #mode: 0750
+    #owner: "{{ username }}"
+    #group: "{{ group }}"
+- name: Create .ssh Directory structure for the user
+  file:
+    name: "/home/users/{{ username_rhel }}/.ssh/"
+    state: directory
+    mode: 0700
+    owner: "{{ username_rhel }}"
+    group: "{{ group }}"
+  when: ansible_distribution == "RedHat"  
+- name: copy the public key in the authorized file
+  copy:
+          #     src: "/key_repo/{{ Domain }}/{{ username }}/authorized_keys"
+    src: "files/authorized_keys"
+    dest: "/home/users/{{ username_rhel }}/.ssh/authorized_keys"
+    mode: 0600
+    force: yes
+    owner: "{{ username_rhel }}"
+    group: "{{ group }}"
+  when: ansible_distribution == "RedHat"
+- name: Create .ssh Directory structure for the user
+  file:
+    name: "/home/users/{{ username_aix }}/.ssh/"
+    state: directory
+    mode: 0700
+    owner: "{{ username_aix }}"
+    group: "{{ group }}"
+  when: ansible_distribution == "Ubuntu"
+- name: copy the public key in the authorized file
+  copy:
+          #     src: "/key_repo/{{ Domain }}/{{ username }}/authorized_keys"
+    src: "files/authorized_keys"
+    dest: "/home/users/{{ username_aix }}/.ssh/authorized_keys"
+    mode: 0600
+    force: yes
+    owner: "{{ username_aix }}"
+    group: "{{ group }}"
+  when: ansible_distribution == "Ubuntu"
+
+
+  register: status
+- name: Status of the entire play
+  debug:
+    msg: "The entire task of user creation and key pushing has been completed successfully"
+  when: status is success
+#####################################################################################
+#- name: Creating user file
+#  file:
+#    name: /etc/sudoers.d/666_{{group}}
+#    state: present
+#    mode: 0440
+- name: Copying the command to the sudo file
+  copy:
+    src: "files/sudo_command_rhel"
+    dest: /etc/sudoers.d/666_{{group}}
+    mode: 0440
+    force: yes
+  when: ansible_distribution == "RedHat"
+
+- name: Copying the command to the sudo file
+  copy:
+    src: "files/sudo_command_ubuntu"
+    dest: /etc/sudoers.d/666_{{group}}
+    mode: 0440
+    force: yes
+  when: ansible_distribution == "Ubuntu"
+ 

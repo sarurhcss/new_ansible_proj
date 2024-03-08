@@ -1,0 +1,20 @@
+---
+- name: test
+  hosts: ansible-node1-rhel69
+  vars:
+    server_name:
+      srv1:
+        dirpath:
+          - name: '/tmp/sticky_bit_dir'
+          - name: '/tmp/sticky_bit_dir2'
+  tasks:
+    - name: To display server name
+      debug:
+        var: item
+      loop: "{{ server_name | community.general.json_query('srv1') }}"
+  
+    - name: Display all dir path
+      ansible.builtin.debug:
+        var: item
+      loop: "{{ server_name | community.general.json_query('srv1.dirpath[*].name') }}"
+  

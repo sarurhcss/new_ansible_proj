@@ -1,0 +1,6 @@
+---
+- name: Create svcansible user in all the servers
+  hosts: all
+  remote_user: root
+  roles:
+    - svcansible

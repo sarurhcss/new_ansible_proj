@@ -1,0 +1,55 @@
+---
+- name: Create ssh key pairs only in this server
+  hosts: localhost
+  connection: local
+  vars:
+    - username: svcansible
+      comment: Sugam
+  tasks:
+    - user:
+        name: "{{ username }}"
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/id_rsa
+        ssh_key_type: rsa
+        ssh_key_comment: "{{ comment }}"
+
+- name: Create svcansible user
+  hosts: all
+  remote_user: root
+  vars:
+    - username: svcansible
+      comment: Sugam
+  tasks:
+    - name: Create a user named svcansible
+      user:
+        name: svcansible
+        comment: Ansible task local user
+        state: present
+    
+    - name: Create ssh key pairs
+      authorized_key:
+        user: "{{ username }}"
+        state: present
+        key: "{{ lookup('file', '/home/{{ username }}/.ssh/id_rsa.pub') }}"
+    - name: Check the sudo permission in sudoers file or check if the user present alredy
+      shell: /bin/grep -v '^ *#' /etc/sudoers | /bin/sed '/^$/d'|/bin/grep svcansible
+      register: svc
+      ignore_errors: yes
+    - name: Read the register values
+      debug:
+        var: svc
+    - name: Add the sudo privilages
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel\s'
+        line: '{{ username }}    ALL=(ALL)       NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+      when: svc.rc != 0
+      ignore_errors: yes
+
+    - name: Disable password expiry for svcansible user
+      shell: chage -m 0 -M 99999 -I -1 -E -1 {{ username }}
+# tasks file for svcansible
+

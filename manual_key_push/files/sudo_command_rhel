@@ -1,0 +1,1 @@
+svc_ww_micuxsl1	ALL=(root)	NOPASSWD: /usr/sbin/dmidecode

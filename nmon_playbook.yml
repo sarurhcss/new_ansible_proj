@@ -1,0 +1,9 @@
+---
+- name: This playbook will install and copy the nmon file to the Nmon server
+  hosts: ansible-node3-rhel86
+  become: yes
+  tasks:
+    - name: Install the package nmon 
+      yum:
+        name: nmon
+        state: installed

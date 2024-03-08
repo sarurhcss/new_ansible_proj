@@ -1,0 +1,56 @@
+---
+- name: Getting the details of windows disk
+  hosts: all
+  become: false
+  vars:
+    - script_path: C:\Users\Administrator\Desktop\disk.ps1
+  tasks:
+    - name: copying the powershell script to the remote server
+      fetch:
+        src: "{{script_path}}"
+        dest: /tmp/
+        flat: yes
+      register: fetch_result
+
+    - name:
+      debug:
+        var: fetch_result
+
+    - name: copy the script to the target server
+      win_copy:
+        src: "{{item}}"
+        dest: 'C:\temp\'
+      with_items: "{{fetch_result.dest}}"
+      register: copy_result
+
+    - name:
+      debug:
+        var: copy_result
+
+    - name: Run the powershell script in the remote server
+      win_command: "powershell.exe -ExecutionPolicy ByPass -File {{item.dest}}"
+      register: out
+      with_items: "{{copy_result.results}}"
+
+    - name: Seting facts
+      set_fact:
+        fact1: "{{out.results|map(attribute='stdout_lines')|flatten}}"
+        fact2: "This the Result"
+
+    - name: see the details of the script execution
+      debug:
+        msg: "{{fact1}}" 
+        #     "{{fact1}}"
+        # msg: "{{permission_after.results|map(attribute='stdout_lines')|flatten|unique }}"
+
+
+
+        #   - name: Run the powershell script in the remote server
+        # win_command: powershell.exe -ExecutionPolicy ByPass -File C:/temp/disk_details.ps1
+        # register: out
+
+        # - name: see the details of the script execution
+        # debug:
+        # var: out
+
+

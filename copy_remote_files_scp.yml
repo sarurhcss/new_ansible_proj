@@ -1,0 +1,8 @@
+---
+- name: Copy files from two remote servers
+  hosts: ansible-node2-rhel76
+  become: yes
+  tasks:
+    - name: Copy the nmon file from src to target
+      shell: scp svcansible@ansible-node2-rhel76:/bustools/nmon/data/ansible-node2-rhel76_221019_0200.nmon /busdata/rsm/eur0/_lgi/nmon/data/ansible-node2-rhel76/chart/
+      delegate_to: ansible-node3-rhel86

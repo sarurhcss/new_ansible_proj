@@ -1,0 +1,4 @@
+name: ansible-node1
+IP: 192.168.42.131
+folders:
+  /data

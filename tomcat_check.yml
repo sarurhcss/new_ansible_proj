@@ -1,0 +1,49 @@
+---
+- hosts: ansible-node3-rhel86
+  ignore_errors: true
+  gather_facts: yes
+  tasks:
+
+    - listen_ports_facts:
+    - name: var for listening ports
+      debug:
+        var: ansible_facts.tcp_listen
+    - name: httpd pid 
+      ansible.builtin.debug:
+        msg: " {{ item.pid }}"
+      vars:
+        tcp_listen_violations: "{{ ansible_facts.tcp_listen | selectattr('name', 'in', tcp_whitelist) | list }}"
+        tcp_whitelist:
+          - httpd
+            #- 25
+      loop: "{{ tcp_listen_violations }}"
+      register: httpd_pid
+
+    - name: Debug httpd pid register value
+      debug:
+        var: httpd_pid
+    - name: Print port depends on pid
+      debug:
+        msg: "{{httpd_pid.results.port}}"
+      when: httpd_pid.results.item.name == httpd  
+    - name: List TCP ports
+      debug:
+              # msg: "{{ ansible_facts.tcp_listen  | map(attribute='port') | sort | list }}"
+        msg: "{{ ansible_facts.tcp_listen  | map(attribute='name') | sort | list }}"
+      register: port_list
+    - name: Debug the port_list register
+      debug:
+        var: port_list
+    - name: TCP whitelist violation
+      debug:
+        msg: TCP port {{ item.port }} by pid {{ item.pid }} violates the whitelist
+      vars:
+        tcp_listen_violations: "{{ ansible_facts.tcp_listen | selectattr('port', 'in', tcp_whitelist) | list }}"
+        tcp_whitelist:
+          - 22
+          - 80
+      loop: "{{ tcp_listen_violations }}"
+    - name: Debug if the port is listening
+      debug:
+        msg: Apache/httpd
+      when: "'completed' in httpd_pid.msg"

@@ -1,0 +1,34 @@
+---
+- name: "Find .txt files in patch_reports/{{ region }}"
+  local_action:
+   module: find
+   paths: "{{ path_for_reports }}/{{ region }}/"
+   patterns: "*.txt"
+  register: files_to_delete
+
+- name: "Delete .txt files in patch_reports/{{ region }}"
+  local_action:
+   module: file
+   path: "{{ item.path }}"
+   state: absent
+  with_items: "{{ files_to_delete.files }}"
+  loop_control:
+   label: '{{ item.path }}'
+- name: Create the directory
+  local_action:
+    module: file
+    path: "{{ path_for_reports }}/{{region}}"
+    state: directory
+    #- name: Create the file
+    # local_action:
+    #  module: file
+    # path: "{{ path_for_reports }}/{{region}}/fstab_{{ ansible_hostname }}.txt"
+    # state: touch
+   
+   
+- name: "Create fresh report files in patch_reports/{{ region }}"
+  local_action:
+   module: copy
+   content: ""
+   dest: "{{ path_for_reports }}/{{ region }}/{{ ansible_hostname }}.txt"
+   force: yes 

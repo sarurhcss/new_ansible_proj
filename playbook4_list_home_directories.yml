@@ -1,0 +1,68 @@
+---
+- name: This playbook is for listing all the user home direcrories 
+  hosts: all ##ansible-node3-rhel86
+  become: yes
+  vars:
+    - home_dir_path: /home
+  tasks:
+    - name: list the users home directories
+      find:
+        paths: "{{home_dir_path}}"
+        recurse: no
+        file_type: directory
+      register: found_directories
+
+    - name: List of user directories present
+      debug:
+        msg: "{{ found_directories.files|map(attribute='path')|map('basename')|list }}"
+      register: exact_dirs
+    - name: Running the id command
+      shell:
+        "id {{item }}"
+      loop: "{{ found_directories.files|map(attribute='path')|map('basename')|list }}"
+      # loop: "{{read_list.stdout_lines}}"
+      register: status
+      ignore_errors: yes
+    - name: status of the user
+      debug:
+       var: status
+
+    - name: Listing the dummy users
+      debug:
+        msg: "{{item.item}}"
+      when: item.rc != 0
+      loop: "{{status.results}}"
+      register: dummy
+
+    - name: List the dummy user only
+      set_fact:
+
+      #debug:
+              # msg: "{{dummy.results|map(attribute='msg')| list}}"
+        fact1: "{{dummy.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"
+
+
+
+
+
+    - name: Making Set fact
+      set_fact:
+        Server_Name: "{{ ansible_fqdn }}"
+        Server_Hostname:  "{{ ansible_hostname }}"
+        OS_Version: "{{ ansible_distribution }}"
+        Server_OS_Version: " {{ ansible_distribution_version }}"
+        IP_Address: "{{ansible_all_ipv4_addresses}}"
+        Kernel: "{{ansible_kernel}}"
+
+    - name: Create the base text file
+      lineinfile:
+        dest: "/tmp/dummy_users.txt"
+        #line: "##### Report ##### \nServer Name: {{Server_Name}} \n Invadid User Path : \n{{dummy.results|map(attribute='msg')|list}} \n#####"
+        line: "##### Report ##### \nServer Name: {{Server_Name}} \nInvadid User Path : \n{{fact1}} \n#####"
+        create: true
+        state: present
+        insertafter: EOF
+
+      delegate_to: localhost
+
+

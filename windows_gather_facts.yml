@@ -1,0 +1,22 @@
+---
+- name: Windows connectivity check
+  hosts: win
+  become: false
+  tasks:
+    - name: Gather facts
+      setup:
+      register: values
+    - name: debug the facts
+      debug:
+        var: values
+
+    - name: Gather disk facts
+      win_disk_facts:
+      register: values2
+    - name: debug the disk register
+      debug:
+        var: values2
+    - name: Output first disk size
+      debug:
+        var: ansible_facts.disks[0].size
+

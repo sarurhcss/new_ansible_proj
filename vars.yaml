@@ -1,0 +1,7 @@
+---
+users:
+  - name: mary
+    password: $6$Qcm8FmDPMBJk9Q2s$KwYQ1RC2cMgoebKP1uNZf/P4g9MvdTIKUvSnpZPMY4XWuSEsgjAA1Kc18UioqWBUGFGArlKtg5PUPMutzuJWZ.
+  - name: joseph
+    #password: $6$RnsJP13tXqsiXMi4$TD8750y5GGqs0mQU9bEvr.eIqJjkqsSSUv8fdQJB3MX.glCqtSRkKeg4NA1eLZW.NmVGZawdqZbccM0tP2oL2.    
+    password: 123    

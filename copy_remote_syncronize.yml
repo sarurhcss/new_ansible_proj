@@ -1,0 +1,49 @@
+---
+- name: Copy filese from one server to another
+  hosts: ansible-node2-rhel76
+  become: no
+  tasks:
+          # - name: Create the directory structure
+          # file:
+          #  dest: /bustools/nmon/data/
+          # mode: 0755
+          # state: directory
+          # become: yes
+          # - name: Create the directory structure
+          # file:
+          # dest: /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/
+          # mode: 0755
+          # state: directory
+          # become: yes
+          # delegate_to: ansible-node3-rhel86
+
+    - name: Copy files from src to nmon server
+      synchronize:
+        src: /bustools/nmon/data/ansible-node2-rhel76_221019_0200.nmon
+        #dest: /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/
+        #dest: /busdata/rsm/eur0/_lgi/nmon/data/ansible-node2-rhel76/chart/
+        dest: /tmp/
+        mode: pull
+        #private_key: /home/svcansible/.ssh/id_rsa
+      become: no   
+        #  rsync_path: "sudo rsync"
+      delegate_to: ansible-node3-rhel86
+      register: statuus1
+      # become_method: sudo
+      # run_once: true
+      # use_ssh_args: yes
+        # rsync_path: "sudo -u svcansible rsync"
+    - name: Display the status1
+      debug:
+        var: statuus1
+
+    - name: fetched files moved to the correct path
+      shell: mv /tmp/ansible-node2-rhel76_221019_0200.nmon /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/
+      delegate_to: ansible-node3-rhel86
+      become: yes
+      register: status2
+
+    - name: display the status2
+      debug:
+        var: status2
+     

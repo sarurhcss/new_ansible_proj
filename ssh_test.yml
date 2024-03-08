@@ -1,0 +1,14 @@
+---
+- name: Testing SSH between servers
+  hosts: ansible-node3-rhel86
+  become: yes
+  tasks:
+    - name: Testing ssh between ansible-node3-rhel86 to 192.168.42.132
+      shell: sudo su - tester -c 'ssh -o StrictHostKeyChecking=no tester@192.168.42.132 -C hostname'
+      #      become: tester
+      register: out
+    - name: Debug the out
+      debug:
+        msg: The connection between the server is success
+      when: out.rc == 0   
+

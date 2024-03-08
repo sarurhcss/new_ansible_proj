@@ -1,0 +1,33 @@
+---
+- name: check the package and list in order
+  hosts: ansible-node3-rhel86
+  become: yes
+  tasks:
+    - name: list the packages
+      shell:
+         "rpm -qa | grep ^a"
+      register: pack
+
+    - name: List the package variables
+      debug:
+        var: pack
+
+    - name: Messageing the items
+      debug:
+        msg: "{{pack.stdout_lines}}"
+
+    - name: List the package as my order
+      debug:
+        msg: "{{item[1]}}"
+      with_items: "{{pack.stdout_lines}}"
+      register: pack1
+
+    - name: debug
+      debug:
+        var: pack1
+
+    - name: display the pack1 variable
+      debug:
+        msg: "{{item[0]}}"
+      with_items: "{{pack1.results.item}}"
+      # {{dir_stat.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"

@@ -1,0 +1,12 @@
+---
+- name: This play book is for ping test
+  hosts: dev
+  become: yes
+  tasks:
+    - name: Tesing the connectivity
+      ping:
+      register: status
+
+    - name: Reading the variable
+      debug:
+        var: status

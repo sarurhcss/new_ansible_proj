@@ -1,0 +1,24 @@
+#- hosts: "{{hg|default('empty_group')}}"
+- hosts: all
+  become: yes
+  tasks:
+  - name: Threshold for root FS is 75% 
+    debug:
+     msg: "The utilization on root filesystem is {{((item.size_total - item.size_available) / item.size_total * 100)|round|int}}%, Clean the space manually if required!"
+    when: 
+    - item.mount == '/' 
+    - item.size_available < item.size_total|float * 0.25
+    loop: '{{ansible_mounts}}'
+    loop_control:
+     label: "{{ item.mount == '/' }}"
+
+  - name: Threshold for var FS is 50%
+    debug:
+     msg: "The utilization on var filesystem is {{((item.size_total - item.size_available) / item.size_total * 100)|round|int}}%, Clean the space manually if required!"
+    when: 
+    - item.mount == '/var' 
+    - item.size_available < item.size_total|float * 0.5
+    with_items: '{{ansible_mounts}}'
+    loop_control:
+     label: 
+     - "{{ item.mount == '/var' }}"

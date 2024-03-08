@@ -1,0 +1,12 @@
+---
+- name: Copy files from src to destination
+  hosts: ansible-node2-rhel76
+  become: yes
+  tasks:
+    - name: Copy file from src to destination
+      fetch:
+        src: /bustools/nmon/data/ansible-node2-rhel76_221019_0200.nmon
+        dest: /tmp/
+        # mode: 0755
+        # remote_src: yes
+      delegate_to: ansible-node3-rhel86

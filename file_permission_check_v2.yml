@@ -1,0 +1,113 @@
+---
+- name: test
+  hosts: ansible-node1-rhel69 ansible-node2-rhel76 ansible-node3-rhel86
+  ignore_errors: yes
+  vars:
+  #  server_name:
+  #    - srv1: ansible-node1-rhel69
+  #      dirpath:
+  #        - /tmp/sticky_bit_dir
+  #        - /tmp/sticky_bit_dir2
+  #        - /tmp/sticky_bit_dir32
+  #     - srv1: ansible-node2-rhel76
+  #      dirpath:
+  #        - /tmp/sticky_bit_dir3
+  #        - /tmp/sticky_bit_dir2
+  #    - srv1: ansible-node3-rhel86
+  #      dirpath:
+  #        - /tmp/sticky_bit_dir5
+  #        - /tmp/sticky_bit_dir6
+            # - /tmp/sticky_bit_dir250
+
+          #server_name:
+          # - srv1: "{{server_fqdn}}"
+          # dirpath: "{{path_list}}"
+                # - "{{cmd_path}}"
+                # - 'chmod 0755 /tmp/sticky_bit_dir'
+                # - 'chmod 0755 /tmp/sticky_bit_dir2'
+                # - 'chmod 0755 /tmp/sticky_bit_dir100'
+          # - srv1: ansible-node2-rhel76
+            # dirpath:
+            # - 'chmod 0755 /tmp/sticky_bit_dir'
+            # - 'chmod 0755 /tmp/sticky_bit_dir2'
+            # - 'chmod 0755 /tmp/sticky_bit_dir3'
+    dir_path:
+      - /tmp/sticky_bit_{{ansible_hostname}}
+      - /tmp/sticky_bit_dir2
+      - /tmp/sticky_bit_dir3
+      - /tmp/sticky_bit_dir33
+      - /tmp/sticky_bit_dir5
+  tasks:
+          # - name: Just Print a hallo
+          # debug:
+          # msg: "This message from {{ansible_hostname}}"
+
+        #    - name: Create sticky bit directories
+        # file:
+        # path: "{{item}}"
+        # state: directory
+        # mode: '1755'
+        # register: created_dir
+        # loop: "{{given_dir_path}}"
+    - name: Create few direcrory
+      file:
+        path: /tmp/sticky_bit_{{ansible_hostname}}
+        state: directory
+        mode: '0757'
+    - name: check the current status of the given files
+      stat:
+        path: "{{item}}" 
+      register: file_perm_current
+      with_items:
+        - "{{dir_path}}"
+
+    - name: dubug
+      debug:
+        var: file_perm_current
+
+    - name: shoing the path
+      debug:
+        msg: "This dir is not present {{item.item}}"
+      when: item.stat.exists == false
+      with_items: "{{file_perm_current.results}}"
+      register: dir_stat
+    
+    - name: debug
+      debug:
+        var: dir_stat
+
+    - name: dir status exact message 
+      debug:
+        msg: "{{dir_stat.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"
+             
+    - name: checking the others read permission presence
+      debug:
+        msg: "{{item.item}} - FALSE POSITIVE"
+      when: (item.stat.exists == true) and ( item.stat.woth == false )
+      with_items: "{{file_perm_current.results}}"
+      register: ow_stat
+      #ignore_errors: yes
+
+      # - name: debug the writable
+      # debug:
+      #  var: ow_stat
+
+    - name: Printing false positive message
+      debug:
+        msg: "{{ow_stat.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"
+
+    - name: dir status exact message
+      debug:
+       msg: "{{dir_stat.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"
+
+       #- name: set fact
+      #   set_fact:
+      #  dir_presence: "{{dir_stat.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"
+
+      # - name: dir status from set fact
+      # debug:
+      #  msg: "{{dir_presence|default('NONE')}}"
+
+
+
+

@@ -1,0 +1,66 @@
+---
+- name: To check the version of installation
+  hosts: all
+  become: yes
+  vars:
+    csv_path: /tmp
+    csv_filename: report10.csv
+    headers: Server Name,Server Hostname,Server OS Version,MW Name,MW Type,Installation Path,MW Version,TCP Port,Instance Name,Status
+
+  tasks:
+    - name: Read the directory path
+      shell:
+        "cat file1.txt"
+      args:
+        chdir: /tmp/ihs
+      register: find_path
+    - name: debug the cariable
+      debug:
+              #var: find_path
+        msg: "{{find_path.stdout_lines}}"
+      register: path_var
+    - name: debug the path_var
+      debug:
+        var: path_var
+
+    - name: reading the version
+      shell:
+        "cat {{item}}/version.txt"
+      with_items:
+        "{{ find_path.stdout_lines}}"
+      register: values
+
+
+    - name: Making Set fact
+      set_fact:
+        Server_Name: "{{ ansible_fqdn }}"
+        Server_Hostname: "{{ ansible_hostname }}"
+        Server_OS_Version: " {{ ansible_distribution_version }}"
+
+    - name: Set fact for ihs_process_path
+      set_fact:
+        ihs_process_path: "{{path_var.msg|join('|')}}"
+
+    - name: Set fact for ihs_version
+      set_fact:
+        ihs_version: "{{values.results|map(attribute='stdout_lines')|join('|')}}"
+    - name: Print the setafct
+      debug:
+        msg: "{{ihs_process_path}}"
+
+    - name: Prin the setfact 
+      debug:
+        msg: "{{ihs_version}}"
+       
+    - name: Create the base csv file
+      copy:
+        dest: /tmp/ihs_version.csv
+        content: Server Name,Server Hostname,Server OS,Server OS Version,Ihs path,Ihs Version
+      delegate_to: localhost
+
+    - name: adding the line
+      lineinfile:
+        path: /tmp/ihs_version.csv
+        line: "{{Server_Name}},{{Server_Hostname}},{{Server_OS_Version}},{{Server_OS_Version}},{{ihs_process_path}},{{ihs_version}}"
+      delegate_to: localhost
+      

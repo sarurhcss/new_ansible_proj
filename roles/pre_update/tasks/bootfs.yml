@@ -1,0 +1,7 @@
+---
+- name: Clean the bootfs
+  shell: yum install yum-utils -y && package-cleanup oldkernels --count=1 -y
+  when: "item.mount == '/boot' and ( item.size_available < item.size_total * 0.5 )"
+  with_items: "{{ ansible_mounts }}"
+  loop_control:
+    label: "{{ item.mount }} == '/boot'"        

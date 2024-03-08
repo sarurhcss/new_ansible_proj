@@ -1,0 +1,13 @@
+---
+- name: grep test
+  hosts: ansible-node1-rhel69
+  become: yes
+  tasks:
+    - name: test the variable
+      shell:
+        "grep svs /tmp/file100.txt"
+        #loop: "{{given_dir_path}}"
+      register: permission
+    - name: print the variable
+      debug:
+        var: permission.stdout

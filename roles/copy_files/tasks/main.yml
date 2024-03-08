@@ -1,0 +1,7 @@
+---
+- name: copy all the files
+  copy:
+    src: files/
+    dest: "{{dest_path}}"
+
+# tasks file for copy_files

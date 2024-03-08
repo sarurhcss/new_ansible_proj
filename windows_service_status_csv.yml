@@ -1,0 +1,57 @@
+---
+- name: Status and restart the windows event log
+  hosts: win
+  become: false
+  tasks:
+  - name: 'Check Windows bluethooth  service Status'
+    win_shell: |
+      Get-Service -ComputerName . -Name bthser* | Select-Object  name, status, starttype
+    register: services_WinEventLog_status
+
+  - name: Debug the register
+    debug:
+      var: services_WinEventLog_status
+
+  - name: 'Check Windows Bluthooth service Status on debug msg'
+    debug:
+      msg: "{{ services_WinEventLog_status.stdout_lines }}"
+    when: services_WinEventLog_status.stdout != ""
+
+  - name: Making the condition with a word
+    debug:
+      msg: "Running"
+    when: "'Running' in services_WinEventLog_status.stdout"
+  - name: Making the condition with a word
+    debug:
+      msg: "Stopped"
+    when: "'Stopped' in services_WinEventLog_status.stdout"
+    register: status2
+  - name: Get the service name
+    debug:
+      msg: "blue"
+    when: services_WinEventLog_status.rc == 0
+#####################################################################################################
+  - name: 'Check Windows EventLog service Status '
+    win_shell: |
+      Get-Service -ComputerName . -Name EventLog | Select-Object  name, status, starttype
+    register: services_WinEventLog_status2
+
+  - name: 'Check Windows EvenLog Status on debug msg'
+    debug:
+      msg: "{{ services_WinEventLog_status2.stdout_lines }}"
+    when: services_WinEventLog_status2.stdout != ""
+
+  - name: Making the condition with a word
+    debug:
+      msg: "Running"
+    when: "'Running' in services_WinEventLog_status2.stdout"
+  - name: Making the condition with a word
+    debug:
+      msg: "Stopped"
+    when: "'Stopped' in services_WinEventLog_status2.stdout"
+    register: status2
+  - name: Get the service name
+    debug:
+      msg: "EventLog"
+    when: services_WinEventLog_status2.rc == 0
+

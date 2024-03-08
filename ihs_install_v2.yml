@@ -1,0 +1,12 @@
+- name: IHS Install
+  hosts: ansible-node2-rhel76
+  become: yes
+  tasks:
+    - name: unzip the tar file
+      unarchive:
+        src: http://192.168.42.131/files/pack.tar
+        dest: /bustools/IBMIM/IM_Shared/
+        remote_src: True
+
+
+

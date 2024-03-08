@@ -1,0 +1,42 @@
+---
+- name: IHS Install
+  hosts: ansible-node2-rhel76
+  become: yes
+  tasks:
+    - name: get the package from remote server
+      fetch:
+        src: "/pack.tar"
+        dest: "/tmp/"
+        flat: yes
+      delegate_to: ansible-node1-rhel69
+      register: file_path
+      # when: inventory_hostname == 'ansible-node1-rhel69'   
+    - name: read the register
+      debug:
+        var: file_path
+    - name: create the dir for the install server
+      file:
+        path: /bustools/IBMIM/IM_Shared
+        state: directory
+        mode: '0755'
+        #when: inventory_hostname == 'ansible-node2-rhel76'
+
+    - name: copy the file from tower to install server
+      copy:
+        src: "{{ item }}"
+        dest: /bustools/IBMIM/IM_Shared/
+        mode: '0755'
+      with_items: "{{ file_path.dest }}"
+      register: tar_file
+
+    - name: debug
+      debug:
+        var: tar_file
+
+    - name: unzip the tar file
+      unarchive:
+        src: /bustools/IBMIM/IM_Shared/pack.tar
+        dest: /bustools/IBMIM/IM_Shared/
+        remote_src: True
+
+

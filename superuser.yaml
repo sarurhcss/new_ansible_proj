@@ -1,0 +1,16 @@
+---
+- name: Create user on a linux server
+  hosts: rhel69
+  become: yes
+  gather_facts: false
+  vars:
+    - user: root
+    - password: $6$n9l26D6cTZBCVAbQ$03KqaDU774uAH1lyMEeOo3m8Ot7OGArzI2Iabrj3G0uxsB5escBH5q3BhMGmud8tYAghVp.D4R8RomkDo0rId0
+  tasks:
+      - name: Create a login user
+        user:
+          name: "{{ user }}"
+          password: "{{ password }}"
+          #          groups:
+          #  - wheel
+          state: present

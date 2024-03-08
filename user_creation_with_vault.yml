@@ -1,0 +1,13 @@
+---
+- name: Create user with password
+  hosts: all
+  become: yes
+  vars_files: vars2.yml
+  tasks:
+    - name: Create usernamed rajendar
+      user:
+        name: rajendar
+        password: "{{ item.password | password_hash('sha512') }}"
+      with_items: "{{users}}"
+
+

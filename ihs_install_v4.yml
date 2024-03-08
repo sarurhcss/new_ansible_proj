@@ -1,0 +1,18 @@
+---
+- name: IHS Install
+  hosts: ansible-node2-rhel76
+  become: yes
+  tasks:
+          # - name: get the package from remote server
+          # fetch:
+          # src: "/pack.tar"
+          # dest: "/tmp/"
+          # flat: yes
+          # delegate_to: ansible-node1-rhel69
+          # register: file_path
+    - name: trying ssh
+      synchronize:
+        src: /pack.tar
+        dest: /tmp/
+      delegate_to: ansible-node1-rhel69
+      #sshpass -p "remote-user-password" scp filename user@remotehost:/dir/path/

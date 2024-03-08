@@ -1,0 +1,104 @@
+---
+- 
+  hosts:  ansible-node3-rhel86 ansible-node2-rhel76
+  ignore_errors: true
+  gather_facts: yes
+  vars:
+    csv_path: /tmp
+    csv_filename: Server_status.csv
+    headers: Server Name,Server Hostname,Server OS,Server OS Versionn,IP Address,Kernel Version,Installed packages
+  tasks: 
+    - name: Removing the old file
+      file:
+        path: /tmp/Server_status.csv
+        state: absent
+      delegate_to: localhost
+
+    - name: Create the Base CSV headers
+      ansible.builtin.lineinfile:
+        dest: "{{ csv_path }}/{{ csv_filename }}"
+        line: "{{ headers }}"
+        create: true
+        state: present
+      delegate_to: localhost
+      run_once: true
+      ##############################################################
+
+     
+    - name: Making Set fact
+      set_fact:
+        Server_Name: "{{ ansible_fqdn }}"
+        Server_Hostname:  "{{ ansible_hostname }}"
+        OS_Version: "{{ ansible_distribution }}"
+        Server_OS_Version: " {{ ansible_distribution_version }}"
+        IP_Address: "{{ansible_all_ipv4_addresses}}"
+        Kernel: "{{ansible_kernel}}"
+
+    - name: Getting all the package installed on a specific month
+      shell: rpm -qa --last | grep -i 2022 | grep -i Jun
+      register: Installed_package
+      delegate_to: localhost
+    - name: Installed package out put
+      debug:
+        var: Installed_package
+
+    - name: copy to  a txt file
+      copy:
+        dest: "/tmp/find_results.txt"
+        content: |
+           "{{ansible_hostname}}"     
+           "{{item}}"
+      with_items: "{{Installed_package.stdout}}"
+      delegate_to: localhost
+    - name: cat the file
+      shell: 
+        "cat /tmp/find_results.txt"
+      register: cat
+      delegate_to: localhost
+    - name: debug the cat
+      debug:
+        var: cat
+
+
+    - name: Build out CSV file
+      ansible.builtin.lineinfile:
+        dest: "{{ csv_path }}/{{ csv_filename }}"
+        #line: "{{ Server_Name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},{{IP_Address}},{{Kernel}},{{Installed_package.stdout_lines|join(' | ')}}" 
+        line: "{{ Server_Name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},{{IP_Address}},{{Kernel}},{{cat.stdout_lines|join('|')}}" 
+        create: true
+        state: present
+        insertafter: EOF
+      delegate_to: localhost
+      #
+      #    - name: Adding the command in the line
+      # ansible.builtin.lineinfile:
+      #  dest: "{{ csv_path }}/{{ csv_filename }}"
+      #  line: "Installed package"
+      #  create: true
+      #  state: present
+      #delegate_to: localhost
+    #
+    #- name: Adding the command in the line
+    #  ansible.builtin.lineinfile:
+    #    dest: "{{ csv_path }}/{{ csv_filename }}"
+    #    line: "{{Installed_package.stdout_lines|join('\n')}}"
+    #    create: true
+    #    state: present
+    #  delegate_to: localhost
+      #   - name: Making Set fact
+      # set_fact:
+      #  csv_tmp: >
+      #   {{ ansible_fqdn }},{{ ansible_hostname }},{{ ansible_distribution }},{{ ansible_distribution_version }},{{Installed_package.stdout_lines|join('\n')}}
+    
+ 
+ 
+      #    - name: Build out CSV file
+      # ansible.builtin.lineinfile:
+      #  dest: "{{ csv_path }}/{{ csv_filename }}"
+        #        line: "{{ Server_Name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},{{packags|default('NONE')}}"
+        # create: true
+        # line: "{{csv_tmp}}"
+        # state: present
+        # insertafter: EOF
+        # delegate_to: localhost
+

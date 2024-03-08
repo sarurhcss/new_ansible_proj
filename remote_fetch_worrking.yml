@@ -1,0 +1,39 @@
+---
+- hosts: ansible-node2-rhel76
+  become: yes
+  tasks:
+  - name: find the nmon files
+    find:
+      paths: "/bustools/nmon/data/"
+      recurse: no
+      patterns: "*.nmon"
+    register: nmon_files
+  - name: Fetch the nmon files
+    fetch:
+      src: "{{ item.path }}"
+      dest: "/tmp/"
+      flat: yes
+    with_items: "{{ nmon_files.files }}"
+    register: nmon_status
+  
+  - debug:
+      var: nmon_status
+  - debug:
+      var: nmon_files
+  - name: Copy the file from tower to nmon server
+    copy:
+      src: "{{ item.dest }}"
+      dest: /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/
+    delegate_to: ansible-node3-rhel86
+    register: status
+    with_items: "{{nmon_status.results}}"
+
+  - name: Debug the status
+    debug:
+      var: status
+  - name: Convert the nmon file to html
+    # shell: /root/nmonchart/nmonchart  /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/{{item.path}} /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/{{item.path}}
+    shell: sudo /root/nmonchart/nmonchart  {{item.dest}} {{item.dest}}.html
+    with_items: "{{status.results}}"
+    delegate_to: ansible-node3-rhel86
+ 

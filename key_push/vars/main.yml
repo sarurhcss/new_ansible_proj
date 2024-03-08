@@ -1,0 +1,9 @@
+---
+username_rhel: svc_ww_micuxsl1
+username_aix: micuxsl1
+group: sl1mon
+#Domain: ipengine360
+#USER_EMAIL_ID: saravanesh.durairaj@cgi.com
+#TICKET: GTOCOMIPSD-5714
+#comment: "{{ username }}@{{ Domain }}, This initial Key Created for ipengine360 ENV on {{ansible_date_time.date}}, Ref: {{ TICKET }}"---
+# vars file for key_push

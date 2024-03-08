@@ -1,0 +1,18 @@
+---
+- name: Getting the details of windows disk 
+  hosts: win
+  become: false
+  tasks:
+    - name: copying the powershell script to the remote server
+      win_copy:
+        src: disk_details.ps1
+        dest: 'C:\temp\'
+
+    - name: Run the powershell script in the remote server
+      win_command: powershell.exe -ExecutionPolicy ByPass -File C:/temp/disk_details.ps1
+      register: out
+
+    - name: see the details of the script execution
+      debug:
+        var: out
+

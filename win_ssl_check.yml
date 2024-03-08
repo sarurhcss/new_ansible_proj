@@ -1,0 +1,22 @@
+---
+- name: Get ia cert from an https port
+  hosts: win
+  become: false
+  tasks:
+    - get_certificate:
+        host: win
+        # become: false
+        port: 10250
+        # delegate_to: win
+      run_once: true
+      register: cert
+
+    - name: Cert output
+      debug:
+        msg: "{{ cert }}"
+
+    - name: How many days until cert expires
+      debug:
+        msg: "cert expires in: {{ expire_days }} days."
+        vars:
+          expire_days: "{{ (( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')) - (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%SZ')) ).days }}"

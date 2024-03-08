@@ -1,0 +1,54 @@
+---
+- name: Status and restart the windows event log
+  hosts: win
+  become: false
+  tasks:
+  - name: 'Check Windows EventLog service Status - before restart'
+    win_shell: |
+      Get-Service -ComputerName . -Name bthserv | Select-Object  name, status, starttype
+    register: services_WinEventLog_status
+
+  - name: Debug the register
+    debug:
+      var: services_WinEventLog_status
+
+  - name: 'Check Windows EventLog service Status - before restart debug###################'
+    debug:
+            # msg: "{{ services_WinEventLog_status.stdout_lines }}"
+      msg: "{{services_WinEventLog_status.stdout_lines[3].split()[2]}}"
+      #when: services_WinEventLog_status.stdout != ""
+
+  - name: Making the condition with a word
+    debug:
+      msg: "Yes it is running"
+    when: "'Running' in services_WinEventLog_status.stdout"
+    register: status
+
+  - name: Making the condition with a word
+    debug:
+      msg: "Yes it is Stopped"
+    when: "'Stopped' in services_WinEventLog_status.stdout"
+    register: status
+
+
+  - name: For csv
+    debug:
+      var: status
+
+  - name: 'Restart Windows EventLog service'
+    win_service:
+      name: EventLog
+      state: restarted
+      force_dependent_services: true
+    register: service_stat
+    when: services_WinEventLog_status.stdout != ""
+
+  - name: 'Check Windows EventLog service Status - after restart'
+    win_shell: |
+      Get-Service -ComputerName . -Name EventLog | Select-Object  name, status, starttype
+    register: services_WinEventLog_status2
+
+  - name: 'Check Windows EventLog service Status - after restart debug'
+    debug:
+      msg: "{{ services_WinEventLog_status2.stdout_lines }}"
+    when: services_WinEventLog_status2.stdout != ""

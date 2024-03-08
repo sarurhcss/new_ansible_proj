@@ -1,0 +1,10 @@
+---
+- name: This is just a test play book
+  hosts: all
+  become: yes
+  tasks:
+    - name: Task one command module
+      command:
+         cmd: uptime
+    - name: Task two ping module
+      ping:

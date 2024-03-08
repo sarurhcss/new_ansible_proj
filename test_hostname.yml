@@ -1,0 +1,8 @@
+---
+- name: This is for testing the hostname
+  hosts: ansible-node2-rhel76
+  become: yes
+  tasks:
+    - name: Taking the hostname from the variable.
+      debug:
+        var: ansible_hostname

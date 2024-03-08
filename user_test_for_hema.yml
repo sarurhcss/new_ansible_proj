@@ -1,0 +1,24 @@
+---
+- name: User test for hema
+  hosts: all
+  become: yes
+  #  vars:
+  #  users:
+  #    - name: gopi
+  #      password: $6$Qcm8FmDPMBJk9Q2s$KwYQ1RC2cMgoebKP1uNZf/P4g9MvdTIKUvSnpZPMY4XWuSEsgjAA1Kc18UioqWBUGFGArlKtg5PUPMutzuJWZ.
+  #    - name: rajesh
+  #      password: $6$Qcm8FmDPMBJk9Q2s$KwYQ1RC2cMgoebKP1uNZf/P4g9MvdTIKUvSnpZPMY4XWuSEsgjAA1Kc18UioqWBUGFGArlKtg5PUPMutzuJWZ.
+
+
+
+  tasks:
+    - name: Creating users from the variable given
+      user:
+        name: "{{ item.name }}"
+        state: present
+        #password: "{{ item.password }}" ## In this method you need to give the encrupted value
+        password: "{{ item.password | password_hash('sha512') }}"  ## In this method you need to give the plain test value
+      with_items: "{{ users }}"
+
+
+

@@ -1,0 +1,54 @@
+---
+- name: Create a user with sec group
+  hosts: ansible-node2-rhel76
+  become: yes
+  vars:
+    sec_groups:
+      - sales3
+      - mktx
+  tasks:
+    - name: Create a user with sec group 
+      user:
+        name: mahesh
+        state: present
+    - name: create sec group
+      user:
+        name: mahesh
+        groups: super
+        append: true
+      ignore_errors: yes
+    
+    - name: create sec group
+      user:
+        name: mahesh
+        groups: sales2
+        append: true
+      ignore_errors: yes
+
+    - name: create sec group
+      user:
+        name: mahesh
+        groups: mkt
+        append: true
+      ignore_errors: yes
+
+    - name: create sec group
+      user:
+        name: mahesh
+        groups: hr
+        append: true
+      ignore_errors: yes
+    - name: create sec group
+      user:
+        name: mahesh
+        groups: adm,mqm
+        append: true
+      ignore_errors: yes
+    - name: create sec group
+      user:
+        name: mahesh
+        groups: adm 
+        append: true
+      ignore_errors: yes
+
+ 

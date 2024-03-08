@@ -1,0 +1,19 @@
+---
+- name: Creating user Suresh
+  hosts: ansible-node3-rhel86,ansible-node4-ubuntu20
+  become: yes
+  vars:
+    users:
+      - iusr_sppagent
+      - iusr_spporacle
+  tasks:
+    - name: Creating user suresh in all the servers
+      user:
+        name: "{{item}}"
+        state: present
+        comment: FR/S/*/*AKSKS/SCIENC LOGIC ACCOUNT
+      loop: "{{users}}"
+        #    - name: Insalling httpd
+        # yum:
+        # name: httpd
+        # state: absent

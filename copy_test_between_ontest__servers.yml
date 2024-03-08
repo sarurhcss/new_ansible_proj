@@ -1,0 +1,71 @@
+---
+- name: Copy the files from server1 to server2
+  #  hosts: ansible-node2-rhel76
+  hosts: ansible-node2-rhel76
+  become: yes
+  vars:
+    - file_name: file1.txt
+  tasks:
+    - name: Choose the latest file with extension nmon
+      find:
+        paths: /tmp
+        patterns: "*nmon"
+        recurse: yes
+        age: -2m
+        age_stamp: mtime
+      register: files
+    - name: Copy the files if found
+      fetch: 
+        src: "{{ (files.files|sort(attribute='mtime', reverse=true)|first).path }}"
+        dest: /tmp/
+        flat: true
+        when: files.files|count > 0  
+
+
+      #    - set_fact:
+      #  latest_files: "{{ latest_files | default([])  + [item.path] }}"
+      # loop: "{{ files_matched.files | sort(attribute='mtime', reverse=true) }}"
+      #when: "item.path | dirname not in latest_files | default([]) | map('dirname')"
+        ##
+        # The loop_control is just there for validation purpose
+        ##
+        # loop_control:
+        # label: "{{ '%Y-%m-%d %H:%M:%S' | strftime(item.mtime) }} {{ item.path }}"
+
+    - debug:
+        var: files
+
+
+        #    - name: Now get the latest file from the target server to tower
+        # fetch:
+        # src: "{{ latest_files }}"
+        # dest: /tmp/
+        # flat: yes
+        #- name: Move the file from Ansible to remote
+        #  hosts: all
+        #  become: yes
+        #  vars:
+        #    - file_name: file1.txt
+        # tasks:
+    - name: Copy the file from tower to nmon server
+      copy:
+        src: /tmp/{{ latest_files }}
+        dest: /tmp/
+      delegate_to: ansible-node3-rhel86
+      register: status
+    - name: showing the results
+      debug:
+        var: status
+        #- name: Removing the file from tower
+        #  hosts: all
+        #  become: yes
+        #  vars:
+        #    - file_name: file1.txt
+
+        #  tasks:
+    - name: Remove the file after copying
+      file:
+        path: /tmp/{{ file_name }}
+        state: absent
+        # when: status.failed == "false"
+      delegate_to: 127.0.0.1

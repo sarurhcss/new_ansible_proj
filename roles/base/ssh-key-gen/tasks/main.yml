@@ -1,0 +1,41 @@
+---
+- name: Creating .ssh  Directory
+  file:
+    path: "/home/{{ username }}/.ssh"
+    state: directory
+- name: Creating a TXt file which will copy for ssh key
+  file:
+    path: "/home/{{ username }}/.ssh/{{ username }}.txt"
+    state: touch
+- name: Creation Directory to store the keys
+  file:
+    path: "/key_repo/{{ Domain }}/{{ username }}/"
+    state: directory
+- name: Creating a authorized_keys empty file
+  file:
+    path: "/key_repo/{{ Domain }}/{{ username }}/authorized_keys"
+    state: touch
+    force: no
+- name: Create ssh key pair for the user
+  user:
+    name: "{{ username }}"
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_file: .ssh/id_rsa
+    ssh_key_type: rsa
+    ssh_key_comment: "{{ comment }}"
+- name: Converting the private key to a file to send mail to the user
+  copy:
+    src: "/home/{{ username }}/.ssh/id_rsa"
+    dest: "/home/{{ username }}/.ssh/{{ username }}.txt"
+    force: yes
+- name: Taking backup of the public key to the backup directory
+  copy:
+    src: "/home/{{ username }}/.ssh/id_rsa.pub"
+    dest: "/key_repo/{{ Domain }}/{{ username }}/authorized_keys"
+    force: yes
+- name: Taking backup the private key to the backup directory
+  copy:
+    src: "/home/{{ username }}/.ssh/{{ username }}.txt"
+    dest: "/key_repo/{{ Domain }}/{{ username }}/{{ username }}.txt"
+# tasks file for ssh-key-gen

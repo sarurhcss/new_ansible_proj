@@ -1,0 +1,117 @@
+---
+- name: This playbook is for listing all the user home direcrories 
+  hosts: ansible-node3-rhel86
+  become: yes
+  vars:
+    - home_dir_path: /home/users
+  tasks:
+    - name: list the users home directories
+      find:
+        paths: "{{home_dir_path}}"
+        recurse: no
+        file_type: directory
+      register: found_directories
+
+      # - name: Debug the register
+      # debug: 
+      # var: found_directories
+
+      # - name: List all found directories of users
+      # debug:
+      #  msg: "{{ item.path.split('/')[2] }}"
+      #with_items: "{{ found_directories.files }}"
+      # register: list_1
+      #  var: found_directories
+    - name: List of user directories present
+      debug:
+        msg: "{{ found_directories.files|map(attribute='path')|map('basename')|list }}"
+      register: exact_dirs
+        #   - name: As a list
+        # debug:
+        
+        
+        # msg: "{{list_1.results|map(attribute='msg')|list}}"
+              #msg: "{{list_1.results|map(attribute='msg')|list|join('|')}}i"
+              #
+    - name: convert the users to a list
+      debug:
+        msg: "{{exact_dirs.msg}}"
+              # msg: '{{ found_directories.files|map(attribute="path")|map("basename")|list }}'
+      register: file_created
+
+    - name: debug the file
+      shell:
+        'echo {{exact_dirs.msg}} > /tmp/newline.txt'
+
+    - name:
+      shell: 
+        'cat /tmp/newline.txt | sed "s/\,/\n/g"| sed "s/^ *//"|sed "s/[][]//g"  > /tmp/final.txt'
+
+    - name:
+      shell:
+        cat /tmp/final.txt
+      register: read_list
+
+    - name: reading the cat list
+      debug:
+        var: read_list
+    - name: check the presence of the user with the id command
+      shell:
+        "id {{item }}"
+      loop: "{{ found_directories.files|map(attribute='path')|map('basename')|list }}"
+      # loop: "{{read_list.stdout_lines}}"
+      register: status
+      ignore_errors: yes
+    - name: status of the user
+      debug:
+       var: status
+
+    - name: display the path
+      debug:
+        msg: "{{item.item.path}}"
+      loop: "{{status.results}}"
+      when: item.rc != 0
+      register: dummy
+
+    - name: list the dummy user path
+      debug:
+        msg: "{{dummy.results|map(attribute='msg')|list}}"
+    - name: Making set fact for path
+      set_fact:
+        dummy_user: "{{dummy.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"
+
+    - name: Making Set fact
+      set_fact:
+        Server_Name: "{{ ansible_fqdn }}"
+        Server_Hostname:  "{{ ansible_hostname }}"
+        OS_Version: "{{ ansible_distribution }}"
+        Server_OS_Version: " {{ ansible_distribution_version }}"
+        IP_Address: "{{ansible_all_ipv4_addresses}}"
+        Kernel: "{{ansible_kernel}}"
+
+    - name: Create the base csv file
+      copy:
+        dest: "/tmp/dummy_users.csv"
+       #content: "{{ headers }}"
+        content: Server Name,Server Hostname,Server OS,Invadid User Path
+      delegate_to: localhost
+
+    - name: Adding the fetched details to the csv file
+      lineinfile:
+        path: "/tmp/dummy_users.csv"
+        line: "{{Server_Name}},{{Server_Hostname}},{{OS_Version}},{{dummy_user}}"
+      delegate_to: localhost
+      become: yes
+
+    - name: Create the base text file
+      lineinfile:
+        dest: "/tmp/dummy_users.txt"
+        #line: "##### Report ##### \nServer Name: {{Server_Name}} \n Invadid User Path : \n{{dummy.results|map(attribute='msg')|list}} \n#####"
+        line: "##### Report ##### \nServer Name: {{Server_Name}} \nInvadid User Path : \n{{dummy.results|selectattr('msg','defined')| map(attribute='msg')|flatten}} \n#####"
+        create: true
+        state: present
+        insertafter: EOF
+
+      delegate_to: localhost
+      become: yes
+

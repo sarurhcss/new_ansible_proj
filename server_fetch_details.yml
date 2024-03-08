@@ -1,0 +1,91 @@
+- name: making the server details
+  hosts: ansible-node2-rhel76,ansible-node3-rhel86
+  vars:
+    command1: rpm -qa --last | grep -i 2022 | grep -i jun
+    command2: uptime
+    command3: uptime;rpm -qa --last | grep -i 2022 | grep -i jun
+  tasks:
+    - name: Remove the previous files
+      file:
+        path: "{{item}}"
+        state: absent
+      loop:
+        - /tmp/fetch_details_test_mode_txt.txt
+        - /tmp/fetch_details_test_mode.csv
+      delegate_to: localhost
+      become: yes
+
+    - name: Making Set fact
+      set_fact:
+        Server_Name: "{{ ansible_fqdn }}"
+        Server_Hostname:  "{{ ansible_hostname }}"
+        OS_Version: "{{ ansible_distribution }}"
+        Server_OS_Version: " {{ ansible_distribution_version }}"
+        IP_Address: "{{ansible_all_ipv4_addresses}}"
+        Kernel: "{{ansible_kernel}}"
+
+    - name: Getting the details of the command1
+      shell:
+        "{{command1}}"
+    #"rpm -qa --last | grep -i 2023 | grep -i Oct"
+      register: Installed_package
+      become: yes
+
+    - name: Getting the details of the command2
+      shell:
+        "{{command2}}"
+      register: Installed_package2
+
+    - name: Getting the details of the command3
+      shell:
+        "{{command3}}"
+      register: Installed_package3
+
+    - name: Installed package out put
+      debug:
+        var: Installed_package2
+      become: yes
+
+        # - name: Build out CSV file
+        #ansible.builtin.lineinfile:
+        #dest: "{{ csv_path }}/{{ csv_filename }}"
+        #line: "{{ Server_Name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},{{IP_Address}},{{Kernel}},{{Installed_package.stdout_lines|join(' | ')}}"
+        #create: true
+        #state: present
+        #insertafter: EOF
+        #delegate_to: localhost
+
+    - name: Temp set fact
+      set_fact:
+        uptim: "{{Installed_package2.stdout}}"
+
+
+###################################################
+    - name: Create the base csv file
+      copy:
+        dest: "/tmp/fetch_details_test_mode.csv"
+       #content: "{{ headers }}"
+        content: Server Name,Server Hostname,Server OS,Server OS Versionn,Kernel Version,Command1 std out,Command2 std out 
+      delegate_to: localhost
+
+    - name: Adding the fetched details to the csv file  
+      lineinfile:
+        path: "/tmp/fetch_details_test_mode.csv"
+        #line: "{{Server_Name}},{{Server_Hostname}},{{OS_Version}},{{Server_OS_Version}},{{Kernel}},{{Installed_package.stdout_lines|join(' | ')}},{{Installed_package2.stdout_lines|join(' | ')}}"
+        line: "{{Server_Name}},{{Server_Hostname}},{{OS_Version}},{{Server_OS_Version}},{{Kernel}},{{Installed_package.stdout_lines|join(' | ')}},{{uptim}}"
+    #line: "{{ Server_Name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},{{ tomcat_name.msg }},{{ MW_Tomcat_version_1|default('NONE') }},{{ MW_Tomcat_path_1|default('NONE') }},{{ cat_version.results|map(attribute='stdout')|list|unique}},{{tomcatprocess.stdout_lines|join('|')}},{{MW_Tomcat_bustool_port}}"
+      delegate_to: localhost
+      become: yes
+
+
+    - name: Create the base text file
+      lineinfile:
+        dest: "/tmp/fetch_details_test_mode_txt.txt"
+        line: "##### Report ##### \nServer Name: {{Server_Name}} \n Command3 std Out : \n{{Installed_package3.stdout_lines|join('\n')}} \n#####"
+        create: true
+        state: present
+        insertafter: EOF
+    
+      delegate_to: localhost
+      become: yes
+      

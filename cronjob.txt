@@ -1,0 +1,1 @@
+01 00 28 * * /usr/bin/chage -d \$(date -d 0days +%Y-%m-%d) -M 30 ibmssh

@@ -1,0 +1,7 @@
+---
+#- name: Gather filesystem entries
+-  include_tasks: clear_create_reports.yml 
+-  include_tasks: filesystems.yml
+-  include_tasks: bootfs.yml
+-  include_tasks: os_basic_info.yml
+# tasks file for pre_update

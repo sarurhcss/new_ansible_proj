@@ -1,0 +1,145 @@
+---
+- name: test
+  hosts: ansible-node1-rhel69
+  ignore_errors: yes
+  vars:
+    server_name:
+      - srv1: ansible-node1-rhel69
+        dirpath:
+          - /tmp/sticky_bit_dir
+          - /tmp/sticky_bit_dir2
+      - srv1: ansible-node2-rhel76
+        dirpath:
+          - /tmp/sticky_bit_dir3
+          - /tmp/sticky_bit_dir2
+      - srv1: ansible-node3-rhel86
+        dirpath:
+          - /tmp/sticky_bit_dir5
+          - /tmp/sticky_bit_dir6
+
+          #server_name:
+          # - srv1: "{{server_fqdn}}"
+          # dirpath: "{{path_list}}"
+                # - "{{cmd_path}}"
+                # - 'chmod 0755 /tmp/sticky_bit_dir'
+                # - 'chmod 0755 /tmp/sticky_bit_dir2'
+                # - 'chmod 0755 /tmp/sticky_bit_dir100'
+          # - srv1: ansible-node2-rhel76
+            # dirpath:
+            # - 'chmod 0755 /tmp/sticky_bit_dir'
+            # - 'chmod 0755 /tmp/sticky_bit_dir2'
+            # - 'chmod 0755 /tmp/sticky_bit_dir3'
+    given_dir_path:
+      - /tmp/sticky_bit_dir1
+        /tmp/sticky_bit_dir2
+        /tmp/sticky_bit_dir3
+        /tmp/sticky_bit_dir4
+        /tmp/sticky_bit_dir5
+        /tmp/sticky_bit_dir6
+        /tmp/sticky_bit_dir7
+ 
+
+
+  tasks:
+    - name: Just Print a hallo
+      debug:
+        msg: "This message from {{ansible_hostname}}"
+
+        #    - name: Create sticky bit directories
+        # file:
+        # path: "{{item}}"
+        # state: directory
+        # mode: '1755'
+        # register: created_dir
+  
+          # loop: "{{given_dir_path}}"
+
+    - name: check the current status of the given files
+      stat:
+        path: "{{item.1}}"
+      register: file_perm_current
+      delegate_to: "{{item.0.srv1}}"
+      with_subelements:
+        - "{{server_name}}"
+        - dirpath
+
+    - name: dubug
+      debug:
+        var: file_perm_current
+
+    - name: shoing the path
+      debug:
+        msg: "This dir is not present {{item.item}}"
+      when: not item.stat.exists
+      with_items: "{{file_perm_current.results}}"
+      register: dir_stat
+
+    - name: debug
+      debug:
+        var: dir_stat
+   
+    - name: dir status debug
+      debug:
+        msg: "{{dir_stat.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"
+
+
+
+    - name: Display the permission before the change
+      shell:
+          "hostname ;ls -ld {{item.1}}"
+      register: permission_before
+      delegate_to: "{{item.0.srv1}}"
+      with_subelements:
+        - "{{server_name}}"
+        - dirpath
+
+    - name: read the permission
+      debug:
+        var: permission_before
+
+    - name: Read the permission after as message
+      debug:
+        msg: "{{permission_before | json_query('results[*].stdout')}}"
+
+    - name: apply the command
+      shell:
+        "chmod 0750 {{item.1}}"
+      delegate_to: "{{item.0.srv1}}"
+      with_subelements:
+        - "{{server_name}}"
+        - dirpath
+
+    - name: Display the permission after the change
+      shell:
+        "hostname ; ls -ld {{item.1}}"
+      register: permission_after
+      delegate_to: "{{item.0.srv1}}"
+      with_subelements:
+        - "{{server_name}}"
+        - dirpath
+
+    - name: dir status debug
+      debug:
+        msg: "{{dir_stat.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"
+
+
+    - name: Read the permission before as message --with trim
+      debug:
+              # msg: "{{permission_before | json_query('results[*].stdout.split('\n')')}}"
+        msg: "{{permission_before.results|map(attribute='stdout_lines')| flatten|unique }}"  ### GOOD AS EXPECTED
+        # "{{permission_after.results|map(attribute='stdout')|join('|')}}
+        # delegate_to: "{{item.0.srv1}}"
+        # with_subelements:
+        # - "{{server_name}}"
+        # - dirpath
+
+
+    - name: Read the permission after as message
+      debug:
+        msg: "{{permission_after.results|map(attribute='stdout_lines')|flatten|unique }}"
+              # msg: "{{permission_after | json_query('results[*].stdout')}}"
+        # delegate_to: "{{item.0.srv1}}"
+        # with_subelements:
+        # - "{{server_name}}"
+        # - dirpath
+

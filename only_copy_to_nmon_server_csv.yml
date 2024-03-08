@@ -1,0 +1,144 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+          
+  - name: Copy the csv file from tower to nmon server
+    copy:
+            #src: "{{ item.dest }}"
+      src: /tmp/nmon/{{ansible_hostname}}/
+      dest: /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/
+    delegate_to: ansible-node3-rhel86
+    register: status2
+    become: yes
+    #    remote_src: yes
+    #delegate_to: ansible-tower-rhel86
+    #with_items: "{{csv_status.results}}"
+
+  - name: Debug the status
+    debug:
+      var: status2
+  - name: collect the current csvfiles
+    find:
+      paths: "/busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/"
+      hidden: true
+      recurse: true
+      file_type: any
+      patterns: "*.csv"
+    register: collected_files
+    delegate_to: ansible-node3-rhel86
+
+  - name: debug
+    debug:
+      var: collected_files
+
+  - name: collect the current files
+    find:
+      paths: "/busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/"
+      hidden: true
+      recurse: true
+      file_type: any
+      patterns: "*gz"
+    register: collected_gz_files
+    delegate_to: ansible-node3-rhel86
+  - name: showing the gz files
+    debug:
+      var: collected_gz_files
+
+  - name: remove the collected files
+    file:
+      path: "{{item.path}}"
+      state: absent
+    with_items: "{{collected_files.files}}"
+    delegate_to: ansible-node3-rhel86
+  - name: Unzip the files
+    shell:
+      cmd:  gunzip {{item.path}}
+      # with_items: "{{status2.results}}"
+    with_items: "{{collected_gz_files.files}}"
+    register: final
+    delegate_to: ansible-node3-rhel86
+    become: yes
+
+  - name: collect the current files
+    find:
+      paths: "/busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/"
+      hidden: true
+      recurse: true
+      file_type: any
+      patterns: "*.csv"
+    register: collected_files2
+    delegate_to: ansible-node3-rhel86
+
+  - name: debug the converted csv files
+    debug:
+      var: collected_files2
+
+  - name: applying fergal command
+    shell:
+      cmd: sort {{item.path}}|sed 's/,/\./g'|sed 's/;/,/g' > {{item.path}}.nmon
+    delegate_to: ansible-node3-rhel86
+    with_items: "{{collected_files2.files}}"
+    become: yes
+
+  - name: collect the current nmon files
+    find:
+      paths: "/busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/"
+      hidden: true
+      recurse: true
+      file_type: any
+      patterns: "*.nmon"
+    register: collected_files3
+    delegate_to: ansible-node3-rhel86
+
+  - name: debug the nmon file path
+    debug:
+      var: collected_files3
+
+  - name: Finally convert the nmon files to html
+    shell:
+      cmd: /root/nmonchart/nmonchart {{item.path}} {{item.path}}.html
+    delegate_to: ansible-node3-rhel86
+    with_items: "{{collected_files3.files}}"
+    become: yes
+
+  - name: Remove the dir from tower
+    file:
+      path: /tmp/nmon
+      state: absent
+    delegate_to: ansible-tower-rhel86
+    become: yes
+
+      # chdir: /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/
+    #shell: gunzip {{item}} /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/
+            # src: /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/*.gz
+
+    # dest: /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/
+    #remote_src: yes
+    #  - name: convert the csv file to html with fergel command
+    # shell: |
+    #  for i in /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/ *.csv; do
+    #    /bin/mv -iv "$i" "(basename "$i" .csv).nmon"
+    #  done
+
+
+
+
+      # shell: sudo sort /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/*.csv /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/*.nmon
+      # delegate_to: ansible-node3-rhel86
+    #with_items: "{{status2.results.path }}"
+    # - name: Convert the nmon file to html
+    # shell: /root/nmonchart/nmonchart  /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/*.nmon /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/*.html
+    #shell: sudo /root/nmonchart/nmonchart  {{item.dest}} {{item.dest}}.html
+    # with_items: "{{status.results}}"
+    #delegate_to: ansible-node3-rhel86
+
+
+    #  - name: Convert the nmon file to html
+    # shell: /root/nmonchart/nmonchart  /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/{{item.path}} /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/{{item.path}}
+    #   shell: sudo /root/nmonchart/nmonchart  {{item.dest}} {{item.dest}}.html
+    #with_items: "{{status2.results}}"
+    # delegate_to: ansible-node3-rhel86
+    # - name: change the extensing to only html
+    # shell: mv {{item.dest}}.html
+

@@ -1,0 +1,17 @@
+---
+- name: test the var
+  hosts: ansible-node1-rhel69
+  vars:
+    toplevel:
+      - srv1: ansible-node1-rhel69
+      - exec:
+          - chmod 0755 /tmp/sticky_bit_dir
+          - chmod 0755 /tmp/sticky_bit_dir2
+
+  tasks:
+          
+    - name: "Exec items"
+      shell: "{{item.exec}}"
+      delegate_to: "{{item.srv1}}"
+      loop:
+        - "{{toplevel}}" 

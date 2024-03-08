@@ -1,0 +1,38 @@
+---
+- name: Fetch Fstab Entries
+  fetch: 
+   src: /etc/fstab 
+   dest: /tmp/fstab.{{ansible_hostname}}.txt 
+   flat: yes
+   #- name: Create a file
+   #  local_action:
+   # module: file
+   # path: "{{ path_for_reports }}/{{ region }}"
+   # state: directory
+   #register: stat
+   #- name: shoing 
+   # debug:
+   # var: stat  
+- name: Move Fstab Entries to Report File
+  local_action:
+   module: blockinfile 
+     path: "{{ path_for_reports }}/{{ region }}/{{ ansible_hostname }}.txt" 
+      path: "{{ path_for_reports }}/{{ ansible_hostname }}.txt" 
+      #src: /tmp/fstab.{{ansible_hostname}}.txt
+   # dest: "/home/svcansible/{{ansible_hostname}}.txt" 
+   dest: "{{ path_for_reports }}/{{ region }}/{{ ansible_hostname }}.txt" 
+   owner: svcansible
+   group: svcansible
+   mode: '0744'
+
+  
+    block: |
+    {{ lookup('file', '/tmp/fstab.{{ansible_hostname}}') }}
+   marker: "{mark}\n"
+   marker_begin: "\n*****PRE_UPDATE: Fstab Entry*****"
+
+- name: Delete the temp file
+  local_action: 
+   module: file 
+   path: /tmp/fstab.{{ansible_hostname}} 
+   state: absent

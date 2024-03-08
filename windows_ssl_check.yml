@@ -1,0 +1,36 @@
+---
+- name: Windows connectivity check
+  hosts: win
+  become: false
+  tasks:
+    - name: running ping in windows server
+      win_ping:
+      register: value
+    - name: debug the result
+      debug:
+        var: value
+
+    - name: run a command
+      win_command: netstat -e
+      register: netstat
+    - name: debug
+      debug:
+        var: netstat
+    - name: copy a file
+      win_copy:
+        src: vars.yaml
+        dest: C:\
+    - name: Installing apache package
+      win_get_url:
+        url: https://archive.apache.org/dist/httpd/binaries/win32/httpd-2.2.25-win32-x86-no_ssl.msi
+        dest: C:\
+
+    - name: Install the package
+      win_package:
+        path: C:\httpd-2.2.25-win32-x86-no_ssl.msi
+        state: present
+    - name: copy the power shell command
+      win_copy:
+        src: ssl.ps1
+        dest: 'C:\temp\'
+        remote_src: no

@@ -1,0 +1,158 @@
+#- name: Gather facts manually
+#  setup:
+          # gather_facts: yes
+          #  register: status
+          #- name: ping hosts
+          #  ping:
+          #  register: connection_test
+          #  ignore_errors: yes
+          #  ignore_unreachable: no
+
+          #- name: result of ping
+          #  debug:
+          #    var: status  
+- name: Checking the user is present or not
+  shell: id svc_ww_micuxsl1
+  when: ansible_distribution == "RedHat"
+  register: user_status
+  ignore_errors: yes
+
+#- name: Debug the status of the user
+#  debug:
+#    var: user_status
+- name: creating Grooup
+  group:
+    name: "{{ group }}"
+    state: present
+#- name: Create directory Structure
+#  file:
+#    name: "/home/users/"
+#    state: directory
+#    mode: 0755
+- name: Checking the secondry group is present or not
+  # shell: getent group sl2mon
+  shell: 'cd /home; ls -l'
+  register: group_check
+  ignore_errors: yes
+
+- name: Displaying the secondry group status
+  debug:
+    var: group_check
+
+- name: Creating user if not present
+  user:
+    name: "{{ username_rhel }}"
+    state: present
+    password: $6$BkhBR65gjPjA3yIa$kg5XIWr2h1s4ccQN/XSuAeixlpzal1qfKdyb.2byoU7sPhf9pDoagUY0pUv6UoLpy5dSNJuKZQdHnEpEeg2t.1
+    home: "/home/users/{{username_rhel}}"
+    group: "{{ group }}"
+    groups: "{{ group_list }}"
+  when: ansible_distribution == "RedHat" and user_status.rc != 0
+
+- name: Adding the secondry group to the user if the group is present
+  user:
+    name: "{{ username_rhel }}"
+    state: present
+    groups: "{{ group_list }}"
+  when: group_check.rc == 0
+
+- name: Creating user if not present
+  user:
+    name: "{{ username_aix }}"
+    state: present
+    password: $6$BkhBR65gjPjA3yIa$kg5XIWr2h1s4ccQN/XSuAeixlpzal1qfKdyb.2byoU7sPhf9pDoagUY0pUv6UoLpy5dSNJuKZQdHnEpEeg2t.1
+    home: "/home/users/{{username_aix}}"
+    shell: "/bin/bash"
+    group: "{{ group }}"
+  when: ansible_distribution == "AIX"
+
+  #- name: Create Directory sructures for the user
+    #  file:
+    #name: "/home/users/{{ username }}/"
+    #state: directory
+    #force: yes
+    #mode: 0750
+    #owner: "{{ username }}"
+    #group: "{{ group }}"
+- name: Create .ssh Directory structure for the user
+  file:
+    name: "/home/users/{{ username_rhel }}/.ssh/"
+    state: directory
+    mode: 0700
+    owner: "{{ username_rhel }}"
+    group: "{{ group }}"
+  when: ansible_distribution == "RedHat"
+  #- name: copy the public key in the authorized file
+  # copy:
+  #  src: "files/authorized_keys"
+  #  dest: "/home/users/{{ username_rhel }}/.ssh/authorized_keys"
+  #  mode: 0600
+  #  force: yes
+  #  owner: "{{ username_rhel }}"
+  #  group: "{{ group }}"
+  #when: ansible_distribution == "RedHat"
+- name: Create .ssh Directory structure for the user
+  file:
+    name: "/home/users/{{ username_aix }}/.ssh/"
+    state: directory
+    mode: 0700
+    owner: "{{ username_aix }}"
+    group: "{{ group }}"
+  when: ansible_distribution == "AIX"
+- name: copy the public key in the authorized file
+  copy:
+    src: "files/authorized_keys_aix"
+    dest: "/home/users/{{ username_aix }}/.ssh/authorized_keys"
+    mode: 0600
+    force: yes
+    owner: "{{ username_aix }}"
+    group: "{{ group }}"
+  when: ansible_distribution == "AIX"
+- name: copy the public key in the authorized file
+  copy:
+    src: "files/authorized_keys_rhel"
+    dest: "/home/users/{{ username_rhel }}/.ssh/authorized_keys"
+    mode: 0600
+    force: yes
+    owner: "{{ username_rhel }}"
+    group: "{{ group }}"
+  when: ansible_distribution == "RedHat"
+
+
+
+  register: status
+- name: Status of the entire play
+  debug:
+    msg: "The entire task of user creation and key pushing has been completed successfully"
+  when: status is success
+#####################################################################################
+#- name: Creating user file
+#  file:
+#    name: /etc/sudoers.d/666_{{group}}
+#    state: present
+#    mode: 0440
+- name: Taking backup of sudoers file
+  shell: sudo cp -p /etc/sudoers /etc/sudoers_bkp_`(date +"%FT%H%M")`
+  # command: sudo cp -p /etc/sudoers /etc/sudoers_bkp_`(date +"%FT%H%M")`
+
+- name: Copying the required command set to the sudo file
+  copy:
+    src: "files/sudo_command_rhel"
+    dest: /etc/sudoers.d/666_{{group}}
+    mode: 0440
+    force: yes
+  when: ansible_distribution == "RedHat"
+
+- name: Copying the command to the sudo file
+  copy:
+    src: "files/sudo_command_aix"
+    dest: /etc/sudoers.d/666_{{group}}
+    mode: 0440
+    force: yes
+  when: ansible_distribution == "AIX"
+
+- name: Adding the template in the sudoers file
+  lineinfile:
+    dest: /etc/sudoers
+    line: '#include /etc/sudoers.d/666_sl1mon'
+  when: ansible_distribution == "RedHat"

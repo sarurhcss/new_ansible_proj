@@ -1,0 +1,8 @@
+---
+- hosts: all
+  #  become: yes
+  # become_method: sudo
+  #`:wq`remote_user: svcansible
+  roles:
+    - lap_key_push
+

@@ -1,0 +1,63 @@
+---
+- name: Generate an HTML report from jinja template
+  hosts: ansible-node3-rhel86
+  gather_facts: true
+  ignore_errors: yes
+  vars:
+    #email settings
+    email_subject: System status Report
+    email_host: stackoverflw.smtp.com
+    email_from: noreply@stackoverflw.com
+    email_to: AdMin_Stack@stackoverflw.com
+
+    #random settings
+    csv_path: /tmp
+    csv_filename: report10.csv
+    headers: Server Name,Server Hostname,Server OS Version,MW Name,MW Type,Installation Path,MW Version,TCP Port,Instance Name,Status
+
+  tasks:
+  - name: Removing the old file
+    file:
+      path: /tmp/report10.csv
+      state: absent
+    delegate_to: localhost
+
+  - name: Gather last Httpd Status
+    #ansible.builtin.shell:  systemctl status httpd | egrep -i Active | awk '{ print $2,$3}'
+    ansible.builtin.shell:  systemctl status httpd 
+    register: soumya
+  - name: debug
+    debug:
+      msg: "Not Installed"
+    when: soumya.failed == True
+    register: http_value
+  - name: debug2
+    debug:
+      var: http_value.msg
+
+  - name: Create the Base CSV headers
+    ansible.builtin.lineinfile:
+      dest: "{{ csv_path }}/{{ csv_filename }}"
+      line: "{{ headers }}"
+      create: true
+      state: present
+    delegate_to: localhost
+    run_once: true
+  - name: Making Set fact
+    set_fact:
+      Server_Name: "{{ ansible_fqdn }}" 
+      Server_Hostname:  "{{ ansible_hostname }}"
+      Server_OS_Version: " {{ ansible_distribution_version }}"
+      MW_Name: "{{ http_value.msg }}"
+
+
+
+  - name: Build out CSV file
+    ansible.builtin.lineinfile:
+      dest: "{{ csv_path }}/{{ csv_filename }}"
+      line: "{{ Server_Name }},{{ Server_Hostname }},{{ Server_OS_Version }},{{MW_Name }}"
+      create: true
+      state: present
+    delegate_to: localhost
+
+

@@ -1,0 +1,5 @@
+---
+username_rhel: svc_ww_micuxsl1
+username_aix: micuxsl1
+group: sl1mon
+group_list: sl2mon

@@ -1,0 +1,1 @@
+drwxr-xr-x. 87 root root 8192 Jul 28 06:12 /etc

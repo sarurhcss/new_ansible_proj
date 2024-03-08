@@ -1,0 +1,69 @@
+---
+- hosts: ansible-node2-rhel76
+  become: yes
+  tasks:
+  - name: find the nmon files
+    find:
+      paths: "/bustools/nmon/data/"
+      recurse: no
+      patterns: "*.nmon"
+    register: nmon_files
+  - name: Fetch the nmon files
+    fetch:
+      src: "{{ item.path }}"
+      dest: "/tmp/"
+      flat: yes
+    with_items: "{{ nmon_files.files }}"
+    register: nmon_status
+  
+    #- name: Move the file from Ansible to remote
+    #  hosts: all
+    # become: yes
+    # vars:
+    #  - file_name: file1.txt
+    #tasks:
+  - debug:
+      var: nmon_status
+  - debug:
+      var: nmon_files
+  - name: Copy the file from tower to nmon server
+    copy:
+      src: "{{ item.dest }}"
+      dest: /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/
+    delegate_to: ansible-node3-rhel86
+    register: status
+    with_items: "{{nmon_status.results}}"
+
+  - name: Debug the status
+    debug:
+      var: status
+  - name: Convert the nmon file to html
+    # shell: /root/nmonchart/nmonchart  /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/{{item.path}} /busdata/rsm/eur0/_lgi/nmon/data/{{ansible_hostname}}/chart/{{item.path}}
+    shell: sudo /root/nmonchart/nmonchart  {{item.dest}} {{item.dest}}.html
+    with_items: "{{status.results}}"
+    delegate_to: ansible-node3-rhel86
+ 
+    #  - name: Convert the nmon file to html file
+    # shell: /root/nmonchart /busdata/rsm/eur0/_lgi/nmon/data/ansible-node2-rhel76/chart/ansible-node2-rhel76_221019_0200.nmon /busdata/rsm/eur0/_lgi/nmon/data/ansible-node2-rhel76/chart/ansible-node2-rhel76_221019_0200.html
+
+    #  - name: Delete the nmon files from the Ansible server
+    # file:
+    #  path: "{{ item.file }}"
+    #  state: absent
+    #with_items: "{nmon_status.results}}"  
+    #delegate_to: 127.0.01
+
+    #- name: Remove the file from Ansible server
+    # hosts: localhost
+    # become: yes
+  #  vars:
+  # files: /tmp/*.nmon
+ 
+    # tasks:
+    # - name: Delete the nmon files from the Ansible server
+    #  file:
+    #    path: /tmp/ansible-node2-rhel76_221016_1056.nmon
+    #   state: absent
+        #    with_items: "{nmon_status.results}}"
+        # delegate_to: 127.0.0.1
+

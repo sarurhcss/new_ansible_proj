@@ -1,0 +1,66 @@
+---
+- 
+  hosts:  ansible-node3-rhel86
+  ignore_errors: true
+  gather_facts: yes
+  vars:
+    csv_path: /tmp
+    csv_filename: Server_status.txt
+    #  headers: Server Name,Server Hostname,Server OS,Server OS Versionn,Installed packages
+  tasks: 
+    - name: Removing the old file
+      file:
+        path: /tmp/Server_status.txt
+        state: absent
+      delegate_to: localhost
+    - name: create empty file
+      file:
+        path: "{{ csv_path }}/{{ csv_filename }}"
+        state: touch
+      delegate_to: localhost
+    - name: Check the installed packages
+      shell:
+        "rpm -qa --last | grep -i 2022 | grep -i Jun"
+      register: Installed_package
+    - name: Installed package out put
+      debug:
+        var: Installed_package
+
+    - name: print values
+      debug:
+        msg: "{{Installed_package.stdout.split('\n')[:-1]| flatten}}\n"
+      register: one_more
+    - name: copy to  a txt file
+      copy:
+        dest: "/tmp/find_results.txt"
+        content: |
+          Server_Name: "{{ ansible_fqdn }}"
+          Server_Hostname: "{{ ansible_hostname }}"
+          OS_Version: "{{ ansible_distribution }}"
+          Server_OS_Version: " {{ ansible_distribution_version }}"
+          "{{item}}"
+      with_items: "{{Installed_package.stdout}}"
+      delegate_to: localhost
+      #    - name: print one more
+      # debug:
+      #  var: one_more  
+
+    - name: Create the Base CSV headers
+      copy:
+        dest: /tmp/Server_status.txt ###"{{ csv_path }}/{{ csv_filename }}"
+        content: |
+           Server_Name: "{{ ansible_fqdn }}"
+           Server_Hostname: "{{ ansible_hostname }}"
+           OS_Version: "{{ ansible_distribution }}"
+           Server_OS_Version: " {{ ansible_distribution_version }}"
+           Installed_packages: 
+           "{{Installed_package.stdout.split('\n')[:-1]}}"
+           #"{{Installed_package.stdout_lines|join('\n')}}\n"
+           #        markers:
+           # begin: "### BEGIN BLOCK ###"
+           # end: "### END BLOCK ###"
+      delegate_to: localhost   
+      ##############################################################
+
+     
+

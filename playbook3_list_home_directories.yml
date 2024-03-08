@@ -1,0 +1,37 @@
+---
+- name: To get the list of home directories
+  hosts: ansible-node3-rhel86
+  become: yes
+  vars:
+    - namespaces: "{{ output.files|map(attribute='path')|map('basename')|list }}"
+      #- namespaces: "{{ output.files|map(attribute='path')|map('basename')|sort }}"
+  tasks:
+    - name: Making Set fact
+      set_fact:
+        Server_Name: "{{ ansible_fqdn }}"
+        Server_Hostname:  "{{ ansible_hostname }}"
+        OS_Version: "{{ ansible_distribution }}"
+        Server_OS_Version: " {{ ansible_distribution_version }}"
+        IP_Address: "{{ansible_all_ipv4_addresses}}"
+        Kernel: "{{ansible_kernel}}"
+
+    - name: check the presence of the user with the id command
+      shell:
+        "dmidecode -t 1"
+      register: status
+      ignore_errors: yes
+    - name: debug the status
+      debug:
+        msg: "{{status.stdout_lines|join('\n')}}"
+
+    - name: Create the base text file
+      lineinfile:
+        dest: "/tmp/dummy1_users.txt"
+        #line: "##### Report ##### \nServer Name: {{Server_Name}} \n Invadid User Path : \n{{dummy.results|map(attribute='msg')|list}} \n#####"
+        line: "##### Report ##### \nServer Name: {{Server_Name}} \nInvadid User Path : \n{{status.stdout_lines|join('\n')}} \n#####"
+        create: true
+        state: present
+        insertafter: EOF
+      delegate_to: localhost
+
+

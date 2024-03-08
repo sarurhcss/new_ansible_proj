@@ -1,0 +1,34 @@
+---
+- name: Back up fstab entries
+  fetch:
+    src: /etc/fstab
+    dest: /tmp/fstab.{{ ansible_hostname }}
+    flat: yes
+    #- name: Create the directory 
+    #  local_action:
+    #    module: file
+    # path: "{{ path_for_reports }}/{{region}}"
+    #state: directory
+    #- name: Create the file
+    # local_action:
+    # module: file
+    # path: "{{ path_for_reports }}/{{region}}/fstab_{{ ansible_hostname }}.txt"
+    # state: touch
+- name: Move fstab entries to report file
+  local_action:
+    module: blockinfile
+    path: "{{ path_for_reports }}/{{ region }}/{{ ansible_hostname }}.txt"
+    block: |
+      {{ lookup('file', '/tmp/fstab.{{ ansible_hostname }}') }}
+    marker: "{mark}\n"
+    marker_begin: "\n******* PRE UPDATE: FSTAB ENTRY ****"
+  register: stat
+  ignore_errors: yes
+- name: Read the stat
+  debug:
+    var: stat  
+- name: Delete the temp file
+  local_action:
+    module: file
+    path: /tmp/fstab.{{ansible_hostname}}
+    state: absent  

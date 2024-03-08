@@ -1,0 +1,28 @@
+tasks:
+    - name: Create Directory sructures for the user
+      file:
+        name: "/home/{{ username }}/"
+        state: directory
+        mode: 0750
+        owner: "{{ username }}"
+        group: "{{ group }}"
+    - name: Create Directory structure for the user
+      file:
+        name: "/home/{{ username }}/.ssh/"
+        state: directory
+        mode: 0700
+        owner: "{{ username }}"
+        group: "{{ group }}"
+    - name: copy the public key in the authorized file
+      copy:
+        src: "/key_repo/{{ Domain }}/{{ username }}/authorized_keys"
+        dest: "/home/{{ username }}/.ssh/authorized_keys"
+        mode: 0600
+        force: yes
+        owner: "{{ username }}"
+        group: "{{ group }}"
+      register: status
+    - name: Status of the entire play
+      debug:
+        msg: "The entire task has been completed successfully"
+      when: status is success

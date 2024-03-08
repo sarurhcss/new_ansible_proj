@@ -1,0 +1,9 @@
+---
+username: ansadmin
+group: admins
+Domain: default
+USER_EMAIL_ID: saravaneshd@gmail.com
+TICKET: GTOCOMIPSD-4182
+comment: "{{ username }}@{{ Domain }}, This is the initial Key Created for IF360 ENV on {{ansible_date_time.date}}, Ref: {{ TICKET }}"
+
+# vars file for ssh-key-gen

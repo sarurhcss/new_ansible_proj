@@ -1,0 +1,9 @@
+---
+ - name: Testing facts
+   hosts: all
+   become: yes
+   gather_facts: no
+   tasks:
+     - name: Tes=sting the facts
+       debug:
+         msg: The IP Address of the server {{ansible_facts.fqdn}} is {{ansible_facts.default_ipv4.address}} 

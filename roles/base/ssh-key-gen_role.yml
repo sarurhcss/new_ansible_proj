@@ -1,0 +1,5 @@
+- name: Creationg the user in Ansible master and store the key in Key-repo Directory
+  hosts: 127.0.0.1
+  connection: local
+  roles:
+    - ssh-key-gen

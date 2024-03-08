@@ -1,0 +1,14 @@
+---
+- name: To check the pariable
+  hosts: all
+  become: yes
+  tasks:
+    - name: pass the variable to debug
+      shell:
+        cmd: "{{var1}}"
+        chdir: /home
+      register: values
+
+    - name: dubug the values
+      debug:
+        var: values

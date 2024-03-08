@@ -1,0 +1,22 @@
+---
+- name: User test for hema
+  hosts: ansible-node1-rhel69
+  vars:
+    users:
+      - name: gopi
+        password: $6$Qcm8FmDPMBJk9Q2s$KwYQ1RC2cMgoebKP1uNZf/P4g9MvdTIKUvSnpZPMY4XWuSEsgjAA1Kc18UioqWBUGFGArlKtg5PUPMutzuJWZ.
+      - name: rajesh
+        password: $6$Qcm8FmDPMBJk9Q2s$KwYQ1RC2cMgoebKP1uNZf/P4g9MvdTIKUvSnpZPMY4XWuSEsgjAA1Kc18UioqWBUGFGArlKtg5PUPMutzuJWZ.
+
+
+
+  tasks:
+    - name: Creating users from the variable given
+      user:
+        name: "{{ item.name }}"
+        state: present
+        password: "{{ item.password }}"
+      with_items: "{{ users }}"
+
+
+

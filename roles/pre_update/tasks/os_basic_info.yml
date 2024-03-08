@@ -1,0 +1,22 @@
+---
+- name: Create the file
+  local_action:
+    module: copy
+    dest: "{{ path_for_reports }}/{{ region }}/Basicinfo_{{ ansible_hostname }}.txt"
+    content: "******* DETAILS *****"
+    force: yes
+
+- name: Collect basic info
+  local_action:
+    module: blockinfile
+    path: "{{ path_for_reports }}/{{ region }}/{{ ansible_hostname }}.txt"
+    block: |
+     ===================================================================================
+     Date & Time: {{ansible_date_time.date}} {{ansible_date_time.time}}
+     IP Address: {{ansible_default_ipv4.address}}
+     Hostname-FQDN: {{ansible_fqdn}}
+     Distribution Release: {{ansible_distribution}} {{ansible_distribution_version}}
+     Kernel Release: {{ansible_kernel}}
+     ===================================================================================
+    marker: "{mark}\n"
+    marker_begin: "\n****PRE_UPDAT: OS-BASIC Information*****"

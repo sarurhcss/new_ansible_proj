@@ -1,0 +1,41 @@
+---
+- name: Check the stateus of service
+  hosts: ansible-node2-rhel76
+  become: yes
+  tasks:
+    - name: Get status of service
+      service_facts:
+      register: stat
+    - name: get the fact
+      debug:
+        var: stat
+    - name: Install httpd
+      yum:
+        name: httpd
+        state: installed
+    - name: Start the service
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+    - name: Copy the content
+      copy:
+        content: 'This is my webserver'
+        dest: /var/www/html/index.html
+        #        owner: root
+        #   group: root
+        mode: '0755'
+      notify: restart httpd
+    - name: Add port in firewalld service
+      firewalld:
+        service: http
+        state: enabled
+        immediate: yes
+        permanent: yes
+      when: ansible_facts.services['firewalld.service'].state == "running" 
+  handlers:
+    - name: restart httpd
+      service:
+         name: httpd
+         state: restarted
+

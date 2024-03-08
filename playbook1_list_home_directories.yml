@@ -1,0 +1,57 @@
+---
+- name: This playbook is for listing all the user home direcrories 
+  hosts: ansible-node3-rhel86
+  become: yes
+  tasks:
+    - name: Get list of all the users
+      getent:
+        database: passwd
+        split: ':'
+
+    - name: list the users home directories
+      find:
+        paths: /home
+        recurse: no
+        file_type: directory
+      register: found_directories
+
+      #  - name: Debug the register
+      # debug: 
+      #  var: found_directories
+
+    - name: List all found directories of users
+      debug:
+        msg: "{{ item.path.split('/')[2] }} "
+      with_items: "{{ found_directories.files }}"
+      register: list_1
+      #  var: found_directories
+    - name: As a list
+      debug:
+        
+        
+        msg: "{{list_1.results|map(attribute='msg')|list}}"
+              #msg: "{{list_1.results|map(attribute='msg')|list|join('|')}}i"
+              #
+    - name: New list from the first register value
+      debug:
+        msg: 
+
+    - name: check the presence of the user with respect to the home directory
+      debug:
+              #msg: "This user {{ item.path.split('/')[2] }} is not present"
+        msg: "{{ item.path.split('/')[2] }}"
+      when: ( item.path.split('/')[2]  not in getent_passwd.keys())
+      with_items: "{{ found_directories.files }}"
+      register: dummy_dir
+      ignore_errors: yes
+
+    - name: Debud the dummy user 
+      debug:
+        var: dummy_dir
+
+    - name: Final list of dummy user
+      debug:
+        msg: "{{dummy_dir.results|map(attribute='msg')|list}}"
+
+
+

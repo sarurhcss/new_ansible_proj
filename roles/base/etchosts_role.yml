@@ -1,0 +1,6 @@
+---
+- name: Make entry in etc hosts file
+  hosts: all
+  remote_user: root
+  roles:
+    - etchosts

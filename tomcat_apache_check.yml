@@ -1,0 +1,108 @@
+---
+- 
+  hosts: ansible-node3-rhel86
+  ignore_errors: true
+  gather_facts: yes
+  vars:
+    csv_path: /tmp
+    csv_filename: tomcat_apache_status.csv
+    headers: Server Name,Server Hostname,Server OS,Server OS Version,MW Name,MW Version,Installation Path,MW Version,TCP Port,Instance Name,Status
+  tasks: 
+    - name: Removing the old file
+      file:
+        path: /tmp/tomcat_apache_status.csv
+        state: absent
+      delegate_to: localhost
+
+    - name: Create the Base CSV headers
+      ansible.builtin.lineinfile:
+        dest: "{{ csv_path }}/{{ csv_filename }}"
+        line: "{{ headers }}"
+        create: true
+        state: present
+      delegate_to: localhost
+      run_once: true
+      ##############################################################
+
+    - name: Check httpd or Apache is present
+      stat:
+        path: /var/www/html/
+      register: info
+    - name: Debuging if the httpd is installed
+      debug:
+              # msg: "Apache/Httpd installed"
+        msg: "Appache/Httpd"
+      when: info.stat.exists == True  
+      register: valuesz
+      #    - name: debug to find the value
+      # debug:
+      #  var: valuesz
+    - name: Apache bustools version
+      shell: "httpd -v |grep 'Server version' |awk '$0=$2' FS=/ RS=' '"
+      register: http_bustools_version
+      #when: httpd_file.stat.exists == True
+    - name: Debuging http version
+      debug: 
+        var: http_bustools_version.stdout  
+      #when: httpd_file.stat.exists == True
+
+
+
+    - name:  Getting the details of HTTP running process
+      shell: ps -ef |grep httpd |grep -v grep | awk '$3 == "1" { print $0 }'
+      register: httpprocess 
+    - debug: var=httpprocess.stdout_lines
+
+    - name: Service HTTP status
+      shell: ps -ef |grep httpd |grep -iv ihs|awk '{for(j=1;j<=NF;j++){if($j~/bin\/httpd$/){print $j}}}' |uniq > /tmp/http_process.txt
+      
+    - name: Service HTTP cat
+      shell: cat  /tmp/http_process.txt
+      register: httpprocess2
+    - debug: var=httpprocess2.stdout_lines
+
+    - name: HTTP/Apache version
+      shell: "{{ item }} -v |grep 'Server version' | awk '$0=$2' FS=/ RS=' '"
+      when: httpprocess2.stdout_lines | length > 0
+      with_items:  "{{ httpprocess2.stdout_lines }}"
+      register: httpversion
+      
+    - debug: msg="{{item.stdout}}"
+      with_items: "{{httpversion.results}}"
+     
+    - name: Making Set fact
+      set_fact:
+        Server_Name: "{{ ansible_fqdn }}"
+        Server_Hostname:  "{{ ansible_hostname }}"
+        OS_Version: "{{ ansible_distribution }}"
+        Server_OS_Version: " {{ ansible_distribution_version }}"
+        MW_Name: "{{ valuesz.msg }}"
+        MW_Version: "{{ http_bustools_version.stdout }}"
+        MW_path: "{{ info.stat.path }}"
+        MW_TCP_Port : "NONE"
+
+    - name: Build out CSV file
+      ansible.builtin.lineinfile:
+        dest: "{{ csv_path }}/{{ csv_filename }}"
+        line: "{{ Server_Name }},{{ Server_Hostname }},{{ ansible_distribution }},{{ Server_OS_Version }},{{MW_Name }},{{MW_Version }},{{MW_path}},-,{{ MW_TCP_Port }}" 
+        create: true
+        state: present
+      delegate_to: localhost
+    - listen_ports_facts:
+    - name: List TCP ports
+      debug:
+              # msg: "{{ ansible_facts.tcp_listen  | map(attribute='port') | sort | list }}"
+        msg: "{{ ansible_facts.tcp_listen  | map(attribute='name') | sort | list }}"
+      register: port_list
+    - name: Debug the port_list register
+      debug:
+        var: port_list
+    - name: TCP whitelist violation
+      debug:
+        msg: TCP port {{ item.port }} by pid {{ item.pid }} violates the whitelist
+      vars:
+        tcp_listen_violations: "{{ ansible_facts.tcp_listen | selectattr('port', 'in', tcp_whitelist) | list }}"
+        tcp_whitelist:
+          - 22
+          - 80
+      loop: "{{ tcp_listen_violations }}"

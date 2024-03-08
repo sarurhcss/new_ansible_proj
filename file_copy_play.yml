@@ -1,0 +1,17 @@
+---
+- name: Copy all the installation files
+  hosts: ansible-node1-rhel69
+  become: yes
+  tasks:
+    - name: copy the entire directory from thel6 server to rhel7 server
+      synchronize:
+        mode: pull
+        src: "/busdata/WebSphere_Backup/"
+        dest: "/tmp/files"
+        
+      register: status1
+
+    - name: Read the variable
+      debug:
+        var: status1
+

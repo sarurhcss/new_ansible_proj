@@ -1,0 +1,85 @@
+---
+- name: Identify and cleatr the sticky bit
+  hosts: all
+  become: yes
+  vars:
+          # given_dir_path: 
+          #  - /tmp/sticky_bit_dir
+          #   - /tmp/sticky_bit_dir2
+    server_name:
+      - srv1: ansible-node1-rhel69
+        dirpath: 'chmod 0755 /tmp/sticky_bit_dir'
+        #dirpath: ['/tmp/sticky_bit_dir', '/tmp/sticky_bit_dir2']
+            # - 'chmod 0755 /tmp/sticky_bit_dir2'
+        # - '/tmp/sticky_bit_dir2'
+  tasks:
+          # - name: Create sticky bit directories
+          # file:
+          # path: "{{item}}"
+          # state: directory
+          # mode: '1755'
+          # register: created_dir
+          # loop: "{{given_dir_path}}"
+
+    - name: sticky bit directory presence now
+      shell:
+        "{{item.dirpath}}"
+              #"{{item. dirpath.split(',') | list}}"
+        #loop: "{{given_dir_path}}"
+        #register: permission
+      #delegate_to: ansible-node1-rhel69
+      delegate_to: "{{item.srv1}}"
+      loop: "{{server_name}}"
+      #with_items: "{{ dirpath(',') | list }}"
+      become: yes
+
+
+    - name: Remove the sticky bit permission
+      shell:
+        "chmod 0755 {{item.given_dir_path_var}}"
+      register: permission_after
+      loop: "{{server_name}}"
+      delegate_to: "{{item.name}}"
+
+
+    - name: Display the permission after change
+      shell:
+        "ls -ld {{item.given_dir_path_var}}"
+      register: permission_after
+      loop: "{{server_name}}"
+      delegate_to: "{{item.name}}"
+
+      # - name: debug the loop
+      # debug:
+      #  var: permission_after
+
+
+
+      # - name: debug the after permission
+      # debug:
+      #  var: item['stdout']
+      #with_items: "{{permission_after['results']}}"
+    - name: Permission before the change
+      debug:
+              #var: permission_af<F6>ter | json_query('results[*].stdout')
+        msg: "{{permission | json_query('results[*].stdout')}}"
+      register: var1
+
+
+    - name: Results of permission after the change
+      debug:
+              #var: permission_after | json_query('results[*].stdout')
+        msg: "{{permission_after | json_query('results[*].stdout')}}"
+      register: var2
+
+      #    - name: debug the var1
+      #debug:
+      #$  var: var1
+      # - name: final
+      # debug:
+      #  msg: The file permission is {{permission_after.results|map(attribute='stdout')|list}}
+
+      # - name: final2
+      # debug:
+      #  msg: The file permission is {{permission_after.results|map(attribute='stdout')|join('|')}}
+

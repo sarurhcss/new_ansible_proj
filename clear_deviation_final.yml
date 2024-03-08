@@ -1,0 +1,81 @@
+---
+- name: Clearing the deviation for the given files
+  hosts: all
+  ignore_errors: yes
+  tasks:
+    - name: checking the current status of the given files
+      stat:
+        path: "{{item.1}}"
+      register: file_perm_current
+      delegate_to: "{{item.0.srv1}}"
+      with_subelements:
+        - "{{server_name}}"
+        - dirpath
+
+    
+    - name: Checking the presence of the given directory
+      debug:
+        msg: "This dir is not present {{item.item}}"
+      when: not item.stat.exists
+      with_items: "{{file_perm_current.results}}"
+      register: dir_stat
+
+    - name: checking the current directory permission 
+      debug:
+        msg: "{{item.item}} - FALSE POSITIVE"
+      when: (item.stat.exists == true) and ( item.stat.woth == false )
+      with_items: "{{file_perm_current.results}}"
+      register: ow_stat
+      ignore_errors: yes
+
+    - name: Analyzing the permission before the change
+      shell:
+          "hostname ;ls -ld {{item.1}}"
+      register: permission_before
+      delegate_to: "{{item.0.srv1}}"
+      with_subelements:
+        - "{{server_name}}"
+        - dirpath
+
+    - name: Clearing the deviation 
+      shell:
+        "chmod 0750 {{item.1}}"
+      delegate_to: "{{item.0.srv1}}"
+      with_subelements:
+        - "{{server_name}}"
+        - dirpath
+
+    - name: Analyzing the permission before the change
+      shell:
+        "hostname ; ls -ld {{item.1}}"
+      register: permission_after
+      delegate_to: "{{item.0.srv1}}"
+      with_subelements:
+        - "{{server_name}}"
+        - dirpath
+
+
+
+
+    - name: Result - Printing the given directory status 
+      debug:
+        msg: "{{dir_stat.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"
+
+    - name: Result - Printing false positive message 
+      debug:
+        msg: "{{ow_stat.results|selectattr('msg','defined')| map(attribute='msg')|flatten}}"
+
+    - name: Result - The permission before the change
+      debug:
+              # msg: "{{permission_before | json_query('results[*].stdout.split('\n')')}}"
+        msg: "{{permission_before.results|map(attribute='stdout_lines')| flatten|unique }}"  ### GOOD AS EXPECTED
+        # "{{permission_after.results|map(attribute='stdout')|join('|')}}
+        # delegate_to: "{{item.0.srv1}}"
+        # with_subelements:
+        # - "{{server_name}}"
+        # - dirpath  
+              # msg: "{{permission_after | json_query('results[*].stdout')}}"
+    - name: Result - The permission after the changee
+      debug:
+        msg: "{{permission_after.results|map(attribute='stdout_lines')|flatten|unique }}"
+              # msg: "{{permission_after | json_query('results[*].stdout')}}"

@@ -1,0 +1,71 @@
+---
+- hosts: all ####ansible-node2-rhel76
+  become: yes
+  tasks:
+  - name: find the nmon files
+    find:
+      paths: "/bustools/nmon/data/"
+      recurse: no
+      patterns: "*.nmon"
+    register: nmon_files
+
+  - name: print files
+    ansible.builtin.debug:
+      var: nmon_files
+
+  - name: find the nmon csv files
+    ansible.builtin.find:
+      paths: "/bustools/nmon/csv/"
+      hidden: true
+      recurse: true
+      file_type: any
+      patterns: "*.gz"
+    register: csv_files
+
+
+  - name: print files
+    ansible.builtin.debug:
+      var: csv_files
+
+      #  - name: Fetch the nmon files
+      # fetch:
+      # src: "{{ item.path }}"
+      # dest: "/tmp/"
+      # flat: yes
+      # with_items: "{{ nmon_files.files }}"
+      # register: nmon_status
+  - name: Create a dir in tower
+    file:
+      path: "/tmp/nmon/{{ansible_hostname}}"
+      state: directory
+      #  delegate_to: localhost
+      mode: '0757'
+    delegate_to: ansible-tower-rhel86
+    become: yes
+    register: dir_path
+
+  - name: showing the created dir path
+    debug:
+      var: dir_path
+
+  - name: Fetch the csv files
+    fetch:
+      src: "{{ item.path }}"
+      # dest: "/tmp/"
+      #dest: "/tmp/nmon/{{ansible_hostname}}/"
+      dest: "/tmp/nmon/{{ansible_hostname}}/"
+      flat: yes
+    with_items: "{{ csv_files.files }}"
+    register: csv_status
+
+  - debug:
+      var: csv_status
+
+  - name: Copy the files from tower
+    copy:
+      src: "/tmp/nmon/{{ansible_hostname}}/"
+      dest: "/tmp/"
+
+    register: status1
+
+

@@ -1,0 +1,16 @@
+---
+- name: Delete the Home Dir
+  hosts: all
+  #  vars:
+  # - home_dir: /home/users
+  tasks:
+
+    - name: Delete the dummy home directories
+      file:
+        path: "{{home_dir}}/{{item}}"
+        state: absent
+      become: yes
+
+      loop: "{{user_dir}}"
+        # - chandru
+        # - balaj

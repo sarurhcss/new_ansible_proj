@@ -1,0 +1,22 @@
+---
+ - name: Play to illustrate order of execution
+   hosts: localhost
+   connection: local
+   pre_tasks:
+     - debug:
+         msg: 'pre-task'
+       notify: my handler
+   roles:
+     - roles/motd
+   tasks:
+     - debug:
+         msg: 'first task'
+       notify: my handler
+   post_tasks:
+     - debug:
+         msg: 'post-task'
+       notify: my handler
+   handlers:
+     - name: my handler
+       debug:
+         msg: Running my handler

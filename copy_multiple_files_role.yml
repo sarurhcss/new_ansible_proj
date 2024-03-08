@@ -1,0 +1,6 @@
+---
+- name: Copy multiple files to remote location
+  hosts: all
+  become: yes
+  roles:
+    - role: roles/copy_files
