@@ -11,6 +11,9 @@
         - "{{server_name}}"
         - dirpath
 
+    - debug:
+        var: permission_before
+
     - name: Clearing the deviation
       shell:
         " ls -ld {item.1}}"
