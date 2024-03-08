@@ -1,4 +1,4 @@
----
+---item.0.srv1
 - name: Clearing the deviation for the given files
   hosts: all
   ignore_errors: yes
@@ -25,7 +25,7 @@
         "hostname ; ls -ld {{item.1}}"
       register: permission_after
       delegate_to: "{{item.0.srv1}}"
-      with_subelements
+      with_subelements:
         - "{{server_name}}"
         - dirpath
 
