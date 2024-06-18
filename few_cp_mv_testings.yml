@@ -1,0 +1,49 @@
+---
+- name: Testings
+  hosts: ansible-node3-rhel86
+  become: yes
+  tasks:
+    - name: BACKUP - cp test- copy a directory from one place to another
+      copy:
+        src: /etc/sudoers.d/
+        dest: /etc/sudoers.d_back/
+        remote_src: yes
+    - name: Remove the dir before creation
+      file:
+        path: /tmp/my_tmp_{{ansible_date_time.date}}
+        state: absent
+    - name: Create a directory
+      file:
+       path: /tmp/my_tmp_{{ansible_date_time.date}}
+       state: directory
+       mode: '0755'
+
+    - name: copy the tar file
+      copy:
+        src: files/sudoers.d.tar
+        dest: /tmp/my_tmp_{{ansible_date_time.date}}
+        mode: '0755'
+    - name: find the file in the respective dir
+      find:
+        paths: "/tmp/my_tmp_{{ansible_date_time.date}}"
+        recurse: no
+        patterns: "*.tar"
+      register: tar_files
+
+    - name: print files
+      ansible.builtin.debug:
+        var: tar_files
+
+
+
+    - name: extract the tar file
+      unarchive:
+        src: "{{item.path}}"
+        dest: /tmp/my_tmp_{{ansible_date_time.date}}
+        remote_src: yes
+      with_items: "{{tar_files.files}}"
+    - name: change the permission
+      shell:
+       "chmod -R 755 /tmp/my_tmp_{{ansible_date_time.date}}"
+
+         

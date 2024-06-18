@@ -1,0 +1,20 @@
+---
+- name: Testing tags
+  hosts: all
+  become: yes
+  tasks:
+    - name: Display the hostname 
+      command: "{{command_1}}"
+      register: task1
+      tags: [never, tsk1]
+
+    - name: Print message
+      debug:
+        msg: "{{msg1}}"
+      tags: [never, tsk2]
+
+    - name: Print message3
+      debug:
+        msg: "{{msg2}}"
+      tags: [never, tsk3]
+

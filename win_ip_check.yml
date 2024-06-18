@@ -1,0 +1,25 @@
+---
+- name: Getting the details of windows disk
+  hosts: all
+  become: false
+  tasks:
+    - name: setup module
+      setup:
+      register: fact
+
+    - name: debug
+      debug:
+        var: ansible_ip_addresses
+
+    - name: Get main IP
+      win_shell: (Get-NetIPAddress -AddressState Preferred -AddressFamily IPv4 -InterfaceAlias Ethernet0 -SkipAsSource $False | select -Property IPAddress).IPAddress
+      register: ip_result
+
+    - name: debug
+      debug:
+        msg: "{{ip_result.stdout_lines}}"
+
+    - name: debug2
+      debug:
+        var: ip_result.stdout
+

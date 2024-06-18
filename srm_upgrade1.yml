@@ -1,0 +1,40 @@
+---
+- name: This play is about to upgrage SRM package
+  hosts: all
+  become: yes
+  tasks:
+    - name: Delete if any directory alredy present
+      shell:
+        rm -rf /tmp/srm_tmp_*
+      become: yes
+
+    - name: Create a directory to copy the downloaded package
+      file:
+        path: /tmp/srm_tmp_{{ansible_date_time.date}}
+        state: directory
+        mode: '0755'
+      become: yes
+      when: ansible_distribution == "RedHat"
+      register: dir_create_status
+
+    - name: debug
+      debug:
+        var: dir_create_status
+
+    - name: copy the srm package to the directory -- For RHEL-7
+      copy:
+        src: srm_packages/vsftpd-3.0.2-25.el7.x86_64.rpm
+        dest: /tmp/srm_tmp_{{ansible_date_time.date}}
+        mode: '0755'
+      when: 
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "7" 
+        - "{{item}}" is  'false'
+      become: yes
+      with_items: "{{dir_create_status.failes}}"
+
+      # Example of and conditions
+      #when:
+        # - ansible_facts['distribution'] == "CentOS"
+        #      - ansible_facts['distribution_major_version'] == "6"
+
