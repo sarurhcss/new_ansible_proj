@@ -24,5 +24,5 @@
     - name: Print message
       debug:
         msg: "{{task2.stdout}}"
-      when:  task2 is success
+      tags: [never, tsk2]
 
