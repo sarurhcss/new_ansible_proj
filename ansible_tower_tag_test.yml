@@ -12,7 +12,7 @@
       debug:
         var: task1 
         # msg: "{{task1.stdout}}"
-      when: task1 is success
+        #when: task1 is success
 
 
     - name: Display the kernal
