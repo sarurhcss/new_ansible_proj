@@ -10,7 +10,8 @@
 
     - name: debug
       debug:
-        var: task1 
+        var: task1
+      tags: [never, tsk1]
         # msg: "{{task1.stdout}}"
         #when: task1 is success
 
