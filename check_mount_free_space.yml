@@ -1,0 +1,22 @@
+---
+- name: Check the mount space
+  hosts: ansible-node3-rhel86
+  become: yes
+  tasks:
+    - name: check the space
+      assert:
+        that: item.size_available > item.size_total|float * 0.18
+        msg: "disk space on / has reached 70% threshold in {{ansible_hostname}}:{{ansible_default_ipv4.address}}"
+      when: item.mount == '/'
+      register: root
+      with_items: '{{ansible_mounts}}'
+
+    - debug: msg="root filesystem is under threshold [70%] in {{ansible_hostname}}:{{ansible_default_ipv4.address}}"
+      when: root is success
+
+    - name: Install the package depends on the free space
+      yum:
+        name: tftp
+        state: installed
+      when: root is success
+

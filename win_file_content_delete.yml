@@ -1,0 +1,27 @@
+---
+- name: Getting the details of windows disk
+  hosts: all
+  become: false
+  tasks:
+    - name: Create a file with content
+      win_copy:
+        dest: C:\temp\my_file.txt
+        content: cat 
+
+
+    - name: Clearing content of the file
+      win_shell: Clear-Content C:\temp\my_file.txt
+
+    - name: Adding a new line to the file
+      win_lineinfile:
+        path: C:\temp\my_file.txt
+        line: 'dog'
+
+    - name: Read the content fo the file
+      win_shell: get-content C:\temp\my_file.txt
+      register: filedata
+
+    - name: debug
+      debug:
+        msg: "{{filedata.stdout_lines}}"
+

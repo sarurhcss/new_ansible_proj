@@ -1,0 +1,34 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Get filesystem details for /
+      ansible.builtin.setup:
+        filter: ansible_mounts
+
+    - name: Assert minimum disk space requirements
+      assert:
+        that:
+          - item.size_available >= 11073741824  # 1 GB in bytes
+        fail_msg: "Not enough disk space on {{ item.mount }}. At least 1GB required."
+        success_msg: "{{ item.mount }} has sufficient space."
+      with_items: "{{ ansible_mounts }}"
+      when: item.mount == "/"
+      register: root
+
+    - name: Install the package depends on the free space
+      yum:
+        name: "{{packages}}"
+        state: absent
+      become: yes
+      when: root is success
+      vars:
+        packages:
+          - vsftpd
+          - git
+          - tftp
+            # - libnsl*
+            # - libnsl2*
+      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "8" and root is success
+
+

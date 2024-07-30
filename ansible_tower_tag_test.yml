@@ -1,6 +1,6 @@
 ---
 - name: Testing tags
-  hosts: all
+  hosts: ansible-node3-rhel86
   become: yes
   tasks:
     - name: Display the hostname 
@@ -8,13 +8,19 @@
       register: task1
       tags: [never, tsk1]
 
-    - name: Print message
+    - name: debug
       debug:
-        msg: "{{msg1}}"
+        msg: "{{task1.stdout}}"
+      when: task1 is success
+
+
+    - name: Display the kernal
+      command: "{{command_2}}"
+      register: task2
       tags: [never, tsk2]
 
-    - name: Print message3
+    - name: Print message
       debug:
-        msg: "{{msg2}}"
-      tags: [never, tsk3]
+        msg: "{{task2.stdout}}"
+      when:  task2 is success
 

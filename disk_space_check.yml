@@ -1,0 +1,13 @@
+---
+- name: check the space of mounts
+  hosts: ansible-node3-rhel86
+  become: yes
+  tasks:
+    - name: mount fact check
+      setup: 
+        filter: ansible_mounts
+      register: mount
+
+    - name: debug
+      debug:
+        var: mount
