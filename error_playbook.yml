@@ -1,6 +1,7 @@
 ---
 - name: check error
   hosts: all
+  ignore_errors: yes
   become: yes
   tasks:
     - name: create a file
