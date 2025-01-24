@@ -1,0 +1,53 @@
+---
+- name: Status and restart the windows event log
+  hosts: win
+  become: false
+  tasks:
+  - name: 'Check Windows EventLog service Status - before restart'
+    win_shell: |
+      Get-Service -ComputerName . -Name vmic* | Select-Object  name, status, starttype, displayname
+    register: services_WinEventLog_status
+
+  - name: Debug the register
+    debug:
+      var: services_WinEventLog_status.stdout_lines
+
+  - name: Debug the register
+    debug:
+      msg: "{{services_WinEventLog_status.stdout_lines[1]}}"
+
+
+
+  - name: Making Set fact
+    set_fact:
+      Server_Name: "{{ ansible_fqdn }}"
+      Server_Hostname:  "{{ ansible_hostname }}"
+      OS_Version: "{{ ansible_distribution }}"
+      Server_OS_Version: "{{ ansible_distribution_version }}"
+      #IP_Address: "{{ansible_all_ipv4_addresses}}"
+      Kernel: "{{ansible_kernel}}"
+
+
+  - name: Create the base text file
+    win_lineinfile:
+      dest: C:\temp\dummy_users.txt
+        #line: "##### Report ##### \nServer Name: {{Server_Name}} \n Invadid User Path : \n{{dummy.results|map(attribute='msg')|list}} \n#####"
+      line: "##### Report ##### \nServer Name: {{Server_Name}} \nInvadid User Path : \n{{services_WinEventLog_status.stdout_lines[1]}}\n{{services_WinEventLog_status.stdout_lines[2]}}\n{{services_WinEventLog_status.stdout_lines[3]}}\n{{services_WinEventLog_status.stdout_lines[4]}}\n{{services_WinEventLog_status.stdout_lines[5]}}\n{{services_WinEventLog_status.stdout_lines[6]}}\n{{services_WinEventLog_status.stdout_lines[7]}}\n{{services_WinEventLog_status.stdout_lines[8]}}\n#####"
+      create: true
+      state: present
+      insertafter: EOF
+
+      #delegate_to: localhost
+
+
+        #line: "##### Report ##### \nServer Name: {{Server_Name}} \n Invadid User Path : \n{{dummy.results|map(attribute='msg')|list}} \n#####"
+        #   line: "##### Report ##### \nServer Name: {{Server_Name}} \nServer Hostname : {{Server_Hostname}} \nService Status: \n{{services_WinEventLog_status.stdout_lines[1:-2]|join('\n')}} \n#####"
+        #line: "##### Report ##### \nServer Name: {{Server_Name}} \nInvadid User Path : \n{{fact1}} \n#####"
+        # create: true
+        # state: present
+      # insertafter: EOF
+      # newline: unix
+
+
+    ###msg: "{{ ' '.join(services_WinEventLog_status.stdout_lines[3].split()[3:])}}"
+

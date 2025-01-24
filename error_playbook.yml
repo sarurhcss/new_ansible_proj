@@ -1,0 +1,9 @@
+---
+- name: check error
+  hosts: all
+  become: yes
+  tasks:
+    - name: create a file
+      file:
+        path: /tpm
+        name: test

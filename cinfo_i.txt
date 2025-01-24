@@ -1,0 +1,35 @@
+
+*********** Mon Oct 21 06:56:59 CEST 2024 ******************
+User: root Groups: system tivlogs
+Host name : mplaix0042   Installer Lvl:06.30.07.18
+CandleHome: /opt/IBM/ITM
+***********************************************************
+...Product inventory
+
+07      Monitoring Agent for GSMA AIX OS
+         aix526  Version: 03.40.00.02
+
+14      Monitoring Agent for GSMA IBM Workload Scheduler
+         aix526  Version: 03.23.00.00
+
+ax      IBM Tivoli Monitoring Shared Libraries
+         aix523  Version: 06.22.02.00
+         aix526  Version: 06.30.07.20
+
+gs      IBM GSKit Security Interface
+         aix523  Version: 07.40.45.00
+         aix526  Version: 08.00.55.17
+         aix524
+
+jr      Tivoli Enterprise-supplied JRE
+         aix526  Version: 08.07.05.00
+
+ud      IBM Tivoli Composite Application Manager Agent for DB2
+         aix526  Version: 07.13.00.00
+
+ui      Tivoli Enterprise Services User Interface
+         aix523  Version: 06.22.04.00
+         aix526  Version: 06.30.07.18
+
+ux      Monitoring Agent for UNIX OS
+         aix526  Version: 06.30.07.11

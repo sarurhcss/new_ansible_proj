@@ -1,0 +1,29 @@
+---
+- name: Getting the details of windows disk
+  hosts: all
+  become: false
+  tasks:
+    - name: get the current mem
+      win_shell: "Get-WmiObject -Class Win32_OperatingSystem | Select-Object -Property FreePhysicalMemory,TotalVisibleMemorySize"
+      register: mem_before
+
+    - debug:
+        msg: "{{mem_before.stdout_lines}}"
+          
+    - name: Create a file with content
+      win_copy:
+        src: files/RAMMap64.exe
+        dest: C:\temp\
+    
+    - name: Clearing content of the file
+      #win_shell: C:\temp\RAMMap64.exe
+      win_command: 'powershell.exe -ExecutionPolicy ByPass -File "C:\temp\RAMMap64.exe -Ew"'
+
+    - name: get the mem after run
+      win_shell: "Get-WmiObject -Class Win32_OperatingSystem | Select-Object -Property FreePhysicalMemory,TotalVisibleMemorySize"
+      register: mem_after
+
+    - debug:
+         msg: "{{mem_after.stdout_lines}}"
+
+

@@ -1,0 +1,40 @@
+---
+- name: Check the auditd.service
+  hosts: all
+  become: yes
+  ignore_errors: yes
+  tasks:
+    - name: check the service in RHEL789
+      shell:
+        "systemctl list-unit-files | grep -i auditd.service"
+      register: status_789
+      when:
+            (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "7") or
+            (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or
+            (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
+
+    - name: Debug the results
+      debug:
+        msg: "{{status_789.stdout_lines}}"
+      when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "7") or
+            (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "8") or
+            (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "9")
+    - name: check the service in THEL6
+      shell:
+        "chkconfig --list | grep auditd | grep -v grep | awk '{print $1}'"
+      register: status_6
+      when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "6") or
+            (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "5")
+
+    - name: debug the results
+      debug:
+        msg: "{{status_6.stdout_lines}}"
+      when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "6") or
+            (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "5")
+
+    - name: disabling in rhel5/6
+      shell:
+        "chkconfig {{item}} off"
+      when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "6") or
+            (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "5")
+      with_items: "{{status_6.stdout_lines}}"

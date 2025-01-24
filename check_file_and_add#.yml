@@ -1,0 +1,11 @@
+---
+- name: add a "#" infront of a line
+  hosts: ansible-node1-rhel69
+  become: yes
+  tasks:
+    - name: Ensure cat is present
+      ansible.builtin.replace:
+        path: /tmp/cat.txt
+        regexp: '^\s*(cat.*)'
+        replace: ':\1'
+

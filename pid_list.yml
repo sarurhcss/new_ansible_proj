@@ -1,0 +1,40 @@
+---
+- name: Taking pid from a file
+  hosts: ansible-node1-rhel69
+  become: yes
+  vars:
+    - first: "{{data1.stdout_lines}}"
+    - second: "{{data2.stdout_lines}}"
+  tasks:
+
+    - name: reading the file
+      shell: 
+        "cat /tmp/pid.txt| grep -v grep |awk  '{print $4}'| awk 'NR > 7 {print}'"
+      register: data1
+
+    - name: reading the file dor data2
+      shell:
+        "cat /tmp/pid.txt| grep -v grep |awk  '{print $2}'| awk 'NR > 7 {print}'"
+      register: data2
+
+    - name: read the first data
+      debug:
+        msg: "{{data1.stdout_lines}}"
+
+    - name: read the second data
+      debug:
+        msg: "{{data2.stdout_lines}}"
+
+    - name: read the value
+      shell:
+        "echo first one is {{item.0}} and the second is {{item.1}}"
+
+      with_together:
+        - "{{data1.stdout_lines}}"
+        - "{{data2.stdout_lines}}"
+      register: data3
+
+    - name: read the command output
+      debug:
+        msg: "{{data3.results|map(attribute='stdout_lines')|flatten|unique }}"
+

@@ -1,0 +1,31 @@
+---
+- name: getting the 5 instance
+  hosts: all
+  become: yes
+  tasks:
+    - name: copy the cinfo file to the target
+      copy:
+        src: /home/svcansible/new_ansible_proj/cinfo_i.txt
+        dest: /tmp/cinfo_i.txt
+
+    - name: getting the instance name for the gs
+      shell:
+        "cat /tmp/cinfo_i.txt | grep -v grep | awk  '{print $1}'|awk 'NR > 8 {print}' | awk '/gs/{p=1}/^ *$/{p=0}p' | grep -v gs"
+      register: gs
+
+    - name: debug gs
+      debug:
+        msg: "{{gs.stdout_lines}}"
+
+    - name: check the variable placing
+      shell:
+        "echo value of gs is {{item}} >> /tmp/newcinfo.txt"
+      with_items: "{{gs.stdout_lines}}"
+      register: gs_result
+
+    - name: gs command result
+      debug:
+        msg: "{{gs_result.results|map(attribute='cmd')|list}}"
+
+
+

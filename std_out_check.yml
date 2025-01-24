@@ -1,0 +1,12 @@
+---
+- name: std out check
+  hosts: all
+  become: yes
+  tasks:
+    - name: df command out
+      shell: "df -h"
+      register: mount
+
+    - name: debug
+      debug:
+        msg: "{{mount.stdout_lines}}"

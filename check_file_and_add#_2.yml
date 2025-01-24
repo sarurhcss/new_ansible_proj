@@ -1,0 +1,17 @@
+---
+- name: add a "#" infront of a line
+  hosts: ansible-node1-rhel69
+  become: yes
+  tasks:
+    - name: take the backup of inittab file
+      copy:
+        src: /etc/inittab
+        dest: /etc/inittab_back.{{ ansible_date_time.iso8601 }}
+        remote_src: yes
+        # preserve: yes
+    - name: Ensure cat is present
+      ansible.builtin.replace:
+        path: /etc/inittab
+        regexp: '^\s*(idaa.*)'
+        replace: ':\1'
+

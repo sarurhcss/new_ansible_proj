@@ -1,0 +1,12 @@
+
+*********** Mon Oct  7 08:31:40 CEST 2024 ******************
+User: root Groups: system tivlogs
+Host name : mplaix0042   Installer Lvl:06.30.07.18
+CandleHome: /opt/IBM/ITM
+***********************************************************
+Host        Prod  PID       Owner   Start  ID                 ..Status
+mplaix0042  07    15073756  root    Jun01  None               ...running
+mplaix0042  ux    12059090  root    Jun01  None               ...running
+mplaix0042  14    37945842  root    Jul13  None               ...running
+mplaix0042  ud    62915014  itwsi2  Jul27  mplaix0042_itwsi2  ...running
+mplaix0042  ud    37224766  itwsi3  Jul27  mplaix0042_itwsi3  ...running

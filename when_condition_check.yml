@@ -1,0 +1,24 @@
+---
+- name: When condition check
+  hosts: all
+  become: yes
+  tasks:
+    - name: Assert minimum disk space requirements
+      assert:
+        that:
+          - item.size_available >= 7073741824  # 1 GB in bytes
+        fail_msg: "Not enough disk space on {{ item.mount }}. At least 1GB required."
+        success_msg: "{{ item.mount }} has sufficient space."
+      with_items: "{{ ansible_mounts }}"
+      when: item.mount == "/"
+      register: root
+
+
+      
+
+    - name: print a message with the condition
+      debug:
+        msg: " Hi this message is because of the condition"
+      when: 
+        - root is success
+        - (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "7") or (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "8")

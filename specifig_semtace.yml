@@ -1,0 +1,41 @@
+---
+- name: check a specific word as a condition
+  hosts: all
+  become: yes
+  ignore_errors: yes
+  tasks:
+    - name: can as a condition to check a user shyam
+      copy:
+        src: /home/svcansible/new_ansible_proj/ser.cat
+        dest: /tmp
+      register: copy_status
+
+    - debug:
+        var: copy_status
+
+    - name: using cat command
+      shell:
+        " cat /tmp/ser.cat"
+      register: out_put
+      #failed_when: "'no know processes' not in out_put.stdout" 
+      #async: 12
+      # poll: 6
+
+    - name: debug
+      debug:
+        var: out_put
+
+    - name: Just ping module
+      ping:
+              #failed_when: "'no known processes are running' not in out_put.stdout and copy_status.changed == true"
+      failed_when: >
+        'no known processes are running' not in out_put.stdout or ansible_facts['distribution'] == "CentOS"
+      register: status
+      # when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "6")
+
+    - name: debug
+      debug:
+        var: status
+        ##'no known processes are running' not in out_put.stdout or copy_status.changed == true
+      
+        #when: (ansible_facts['distribution'] == "RedHat" and ansible_facts['distribution_major_version'] == "6")
