@@ -1,0 +1,25 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: |
+    pip3 install ansible[azure]
+  displayName: 'Install Ansible'
+
+- script: |
+    # Run Ansible to create RG
+    ansible-playbook ansible_azure_rg_create.yml
+  displayName: 'Run the playbook'
+  env:
+    AZURE_SUBSCRIPTION_ID: $(AZURE_SUBSCRIPTION_ID)
+    AZURE_CLIENT_ID: $(AZURE_CLIENT_ID)
+    AZURE_SECRET: $(AZURE_SECRET)
+    AZURE_TENENT: $(AZURE_TENENT)
