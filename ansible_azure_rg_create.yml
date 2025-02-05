@@ -1,0 +1,9 @@
+---
+- hosts: localhosts
+  connection: local
+  vars:
+    resource_group: RG100
+  tasks:
+    - name: creating RG
+      azure_rm_resourcegroup:
+      location: East US
